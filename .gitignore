@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.pyc
+
+# Entornos virtuales
+venv/
+.venv/
+
+# Base de datos generada (no se sube al repositorio)
+datos/*.db

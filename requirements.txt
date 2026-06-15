@@ -1,0 +1,6 @@
+Flask>=3.0
+reportlab>=4.0
+
+# Nota: cuando todo funcione, conviene fijar las versiones exactas con:
+#   pip freeze > requirements.txt
+# Bootstrap y Chart.js NO van aquí: se cargan desde el HTML (CDN o /static).
