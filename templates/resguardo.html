@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block titulo %}Resguardo de depósito · {{ app_nombre }}{% endblock %}
+
+{% block contenido %}
+
+  {# Estos botones NO salen al imprimir (clase no-imprimir, oculta por CSS). #}
+  <div class="no-imprimir mb-3 d-flex gap-2">
+    <button type="button" class="btn btn-principal" onclick="window.print()">
+      <i class="bi bi-printer"></i> Imprimir
+    </button>
+    <a href="{{ url_for('incidencias.nueva') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  {# La "hoja" es el documento en sí. En pantalla se ve como un folio y al
+     imprimir ocupa un A4 (estilos en estilos.css, sección de impresión). #}
+  <div class="hoja">
+
+    {# -------------------- Cabecera del taller -------------------- #}
+    <header class="hoja-cabecera">
+      <div>
+        <div class="hoja-nombre">{{ taller.nombre }}</div>
+        {% if taller.lema %}<div class="hoja-lema">{{ taller.lema }}</div>{% endif %}
+      </div>
+      <div class="hoja-contacto small">
+        {{ taller.direccion }}<br>
+        Tel. {{ taller.telefono }}{% if taller.email %} · {{ taller.email }}{% endif %}
+      </div>
+    </header>
+
+    {# -------------------- Título -------------------- #}
+    <div class="hoja-titulo">
+      <h1>RESGUARDO DE DEPÓSITO N.º ____________</h1>
+      <p>PARA SU REPARACIÓN SIN PRESUPUESTO PREVIO</p>
+    </div>
+
+    {# -------------------- Fechas -------------------- #}
+    <div class="hoja-fechas">
+      <div class="caja-fecha">
+        <span>Fecha de entrada</span>
+        <strong>{{ datos.fecha_entrada | fecha_es }}</strong>
+      </div>
+      <div class="caja-fecha">
+        <span>Entrega prevista</span>
+        <strong>{{ datos.fecha_entrega | fecha_es }}</strong>
+      </div>
+    </div>
+
+    {# -------------------- Cliente -------------------- #}
+    <section class="hoja-bloque">
+      <h2>Cliente</h2>
+      <p class="mb-1"><strong>{{ datos.nombre }}</strong>
+        {% if datos.cif %}&nbsp;&nbsp;·&nbsp;&nbsp;DNI/CIF: {{ datos.cif }}{% endif %}
+      </p>
+      <p class="mb-0">
+        {{ datos.domicilio }}{% if datos.numero %}, {{ datos.numero }}{% endif %}
+        {% if datos.cp or datos.poblacion %} — {{ datos.cp }} {{ datos.poblacion }}{% endif %}
+        {% if datos.telefono %}<br>Tel.: {{ datos.telefono }}{% endif %}
+      </p>
+    </section>
+
+    {# -------------------- Vehículo -------------------- #}
+    <section class="hoja-bloque">
+      <h2>Vehículo</h2>
+      <table class="tabla-vehiculo">
+        <tr>
+          <th>Marca y modelo</th>
+          <td>{{ datos.marca_modelo }}</td>
+          <th>Matrícula</th>
+          <td>{{ datos.matricula }}</td>
+        </tr>
+        <tr>
+          <th>Kilómetros</th>
+          <td>{{ datos.kilometros }}</td>
+          <th>Coste diario de estancia</th>
+          <td>{{ taller.coste_diario }}</td>
+        </tr>
+        <tr>
+          <th>Combustible</th>
+          <td colspan="3">
+            {# Mostramos los cinco niveles y resaltamos el seleccionado. #}
+            {% for nivel in ["0", "1/4", "1/2", "3/4", "4/4"] %}
+              <span class="nivel {% if datos.combustible == nivel %}nivel-activo{% endif %}">
+                {{ nivel }}
+              </span>
+            {% endfor %}
+          </td>
+        </tr>
+      </table>
+    </section>
+
+    {# -------------------- Autorización -------------------- #}
+    <section class="hoja-bloque">
+      <p class="texto-legal">
+        El cliente autoriza expresamente al taller a realizar las reparaciones
+        que se detallan a continuación <strong>sin presupuesto previo</strong>,
+        conforme al artículo 14.5 del Real Decreto 1457/1986, de 10 de enero,
+        por el que se regula la actividad industrial y la prestación de
+        servicios en los talleres de reparación de vehículos. Asimismo, autoriza
+        las pruebas en carretera necesarias para el diagnóstico y la
+        verificación de la reparación, y declara que el vehículo tiene en vigor
+        el seguro obligatorio.
+      </p>
+    </section>
+
+    {# -------------------- Trabajos -------------------- #}
+    <section class="hoja-bloque">
+      <h2>Trabajos a realizar</h2>
+      <ol class="lista-trabajos">
+        {% if datos.reparaciones %}
+          {% for linea in datos.reparaciones %}
+            <li>{{ linea }}</li>
+          {% endfor %}
+        {% else %}
+          {# Si no se escribió ningún trabajo, dejamos líneas en blanco para
+             rellenar a mano. #}
+          {% for _ in range(4) %}<li>&nbsp;</li>{% endfor %}
+        {% endif %}
+      </ol>
+    </section>
+
+    {# -------------------- Piezas y firmas -------------------- #}
+    <section class="hoja-bloque">
+      <p class="mb-3">
+        <strong>Piezas sustituidas:</strong>
+        el cliente
+        {% if datos.recoger_piezas == "Sí" %}
+          <strong>SÍ</strong> desea recoger las piezas sustituidas.
+        {% else %}
+          <strong>NO</strong> desea recoger las piezas sustituidas.
+        {% endif %}
+      </p>
+
+      <div class="firmas">
+        <div class="firma">
+          <div class="linea-firma"></div>
+          Firma del cliente
+        </div>
+        <div class="firma">
+          <div class="linea-firma"></div>
+          Por el taller
+        </div>
+      </div>
+    </section>
+
+    {# -------------------- Información al cliente -------------------- #}
+    <section class="hoja-bloque info-cliente">
+      <h2>Información al cliente</h2>
+
+      <h3>Derecho a presupuesto previo</h3>
+      <p class="texto-legal">
+        El cliente tiene derecho a la elaboración de un presupuesto previo y por
+        escrito de las reparaciones. La firma de este resguardo en el apartado
+        de autorización supone la renuncia a dicho presupuesto.
+      </p>
+
+      <h3>Garantía</h3>
+      <p class="texto-legal">
+        La reparación efectuada queda garantizada durante 3 meses o 2.000
+        kilómetros (lo que antes ocurra). En los vehículos industriales el plazo
+        es de 15 días (artículo 16 del Real Decreto 1457/1986). Las piezas que
+        cuenten con garantía propia del fabricante mantendrán el plazo que esta
+        establezca cuando sea superior.
+      </p>
+
+      <h3>Normativa legal</h3>
+      <p class="texto-legal">
+        Este establecimiento dispone de hojas de reclamaciones a disposición del
+        cliente. Resulta de aplicación el Real Decreto 1457/1986 y la demás
+        normativa vigente de defensa de los consumidores y usuarios.
+      </p>
+
+      {# OJO: el formulario original citaba la LOPD 15/1999, que está DEROGADA.
+         La hemos sustituido por la normativa vigente (RGPD + LOPDGDD). Si se
+         prefiere el texto antiguo, basta con cambiar este párrafo. Conviene que
+         lo revise la gestoría del taller. #}
+      <h3>Tratamiento de datos</h3>
+      <p class="texto-legal">
+        De conformidad con el Reglamento (UE) 2016/679 (RGPD) y la Ley Orgánica
+        3/2018, de 5 de diciembre, de Protección de Datos Personales y garantía
+        de los derechos digitales, los datos personales recogidos en este
+        documento serán tratados por {{ taller.nombre }}, con domicilio en
+        {{ taller.direccion }}, como responsable del tratamiento, con la
+        finalidad de gestionar la reparación del vehículo y atender las
+        obligaciones derivadas de dicha relación. El cliente podrá ejercer sus
+        derechos de acceso, rectificación, supresión, limitación, portabilidad y
+        oposición dirigiéndose por escrito a la dirección indicada. Los datos se
+        conservarán durante el tiempo necesario para cumplir las obligaciones
+        legales aplicables.
+      </p>
+    </section>
+
+    {# -------------------- Pie del documento -------------------- #}
+    <footer class="hoja-pie small">
+      {{ taller.nombre }} — {{ taller.direccion }}<br>
+      Tel. {{ taller.telefono }}{% if taller.fax %} · Fax {{ taller.fax }}{% endif %}{% if taller.email %} · {{ taller.email }}{% endif %}
+    </footer>
+
+  </div>
+
+{% endblock %}

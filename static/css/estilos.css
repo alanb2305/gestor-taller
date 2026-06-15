@@ -1,0 +1,298 @@
+/* ===========================================================================
+   Estilos propios de la aplicación.
+   Se carga DESPUÉS de Bootstrap, así que lo que pongamos aquí manda sobre él.
+
+   El archivo tiene tres partes:
+     1. Variables y estilos generales de la interfaz (navbar, tarjetas...).
+     2. El resguardo (la "hoja"): cómo se ve en pantalla.
+     3. Impresión (@media print): cómo se imprime en A4.
+   =========================================================================== */
+
+
+/* ---------------------------------------------------------------------------
+   1. INTERFAZ
+   --------------------------------------------------------------------------- */
+
+/* Definimos el color de acento una sola vez como variable. Si algún día se
+   quiere cambiar el color del programa, solo hay que tocarlo aquí. */
+:root {
+  --acento: #e07b00;        /* naranja "de taller" */
+  --acento-oscuro: #b86400; /* el mismo, más oscuro, para el hover */
+}
+
+body {
+  background-color: #f5f5f5;
+}
+
+/* Barra de navegación superior */
+.barra-app {
+  background-color: #2b2b2b;
+}
+.barra-app .navbar-brand,
+.barra-app .nav-link {
+  color: #f1f1f1;
+}
+.barra-app .nav-link:hover {
+  color: var(--acento);
+}
+
+/* Pie de página de la interfaz */
+.pie-app {
+  background-color: #2b2b2b;
+  color: #cfcfcf;
+}
+
+/* Color de acento reutilizable para iconos y textos */
+.text-acento {
+  color: var(--acento);
+}
+
+/* Botón principal (acciones importantes: generar resguardo, imprimir...) */
+.btn-principal {
+  background-color: var(--acento);
+  border-color: var(--acento);
+  color: #fff;
+}
+.btn-principal:hover {
+  background-color: var(--acento-oscuro);
+  border-color: var(--acento-oscuro);
+  color: #fff;
+}
+
+/* Tarjetas de la pantalla de inicio */
+.tarjeta-accion {
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+/* Solo las tarjetas activas (las que son enlaces) reaccionan al pasar el ratón */
+a .tarjeta-accion:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+/* Las tarjetas de "Próximamente" se ven apagadas */
+.tarjeta-inactiva {
+  opacity: 0.6;
+}
+.tarjeta-inactiva i {
+  color: #9a9a9a;
+}
+
+
+/* ---------------------------------------------------------------------------
+   2. EL RESGUARDO EN PANTALLA
+   La "hoja" simula un folio: fondo blanco, ancho de A4 y una sombrita.
+   --------------------------------------------------------------------------- */
+
+.hoja {
+  background: #fff;
+  color: #000;
+  max-width: 21cm;           /* ancho de un A4 */
+  margin: 0 auto;
+  padding: 1.5cm;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Cabecera: nombre del taller a la izquierda, contacto a la derecha */
+.hoja-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid var(--acento);
+  padding-bottom: 0.6rem;
+  margin-bottom: 1rem;
+}
+.hoja-nombre {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+.hoja-lema {
+  color: #555;
+  font-style: italic;
+}
+.hoja-contacto {
+  text-align: right;
+  color: #555;
+}
+
+/* Título del documento */
+.hoja-titulo {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.hoja-titulo h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+.hoja-titulo p {
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  margin: 0.2rem 0 0;
+}
+
+/* Las dos cajas de fechas, una al lado de la otra */
+.hoja-fechas {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.caja-fecha {
+  flex: 1;
+  border: 1px solid #aaa;
+  padding: 0.4rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+}
+.caja-fecha span {
+  font-size: 0.75rem;
+  color: #555;
+}
+
+/* Cada bloque del resguardo (cliente, vehículo, trabajos...) */
+.hoja-bloque {
+  margin-bottom: 1rem;
+}
+.hoja-bloque h2 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 0.2rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Tabla con los datos del vehículo */
+.tabla-vehiculo {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tabla-vehiculo th,
+.tabla-vehiculo td {
+  border: 1px solid #bbb;
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+.tabla-vehiculo th {
+  background: #f0f0f0;
+  font-weight: 600;
+  width: 18%;
+}
+
+/* Niveles de combustible: cinco recuadros; el activo se resalta en naranja */
+.nivel {
+  display: inline-block;
+  border: 1px solid #bbb;
+  padding: 0.1rem 0.5rem;
+  margin-right: 0.25rem;
+  border-radius: 3px;
+  color: #888;
+}
+.nivel-activo {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Párrafos legales: un poco más pequeños y justificados */
+.texto-legal {
+  font-size: 0.8rem;
+  text-align: justify;
+  margin-bottom: 0.5rem;
+}
+
+/* Lista de trabajos */
+.lista-trabajos {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+.lista-trabajos li {
+  margin-bottom: 0.2rem;
+}
+
+/* Firmas: dos columnas con una línea encima del texto */
+.firmas {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+.firma {
+  flex: 1;
+  text-align: center;
+  font-size: 0.8rem;
+}
+.linea-firma {
+  border-top: 1px solid #000;
+  margin-bottom: 0.3rem;
+  height: 2.5rem;   /* hueco para firmar encima de la línea */
+}
+
+/* Apartado "Información al cliente": letra pequeña, separado por una línea */
+.info-cliente {
+  border-top: 1px solid #ccc;
+  padding-top: 0.6rem;
+}
+.info-cliente h3 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin: 0.5rem 0 0.2rem;
+}
+
+/* Pie del documento */
+.hoja-pie {
+  border-top: 1px solid #ccc;
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  text-align: center;
+  color: #555;
+}
+
+
+/* ---------------------------------------------------------------------------
+   3. IMPRESIÓN
+   Lo que se aplica SOLO al imprimir (o al guardar como PDF).
+   La idea: que salga únicamente la hoja, sin la barra ni el pie de la web ni
+   los botones, y que ocupe bien un A4.
+   --------------------------------------------------------------------------- */
+@media print {
+
+  /* Ocultamos todo lo que es de la web y no del documento */
+  .barra-app,
+  .pie-app,
+  .no-imprimir {
+    display: none !important;
+  }
+
+  /* Sin fondos grises ni márgenes que estorben al imprimir */
+  body {
+    background: #fff;
+  }
+  main.container {
+    margin: 0;
+    padding: 0;
+    max-width: none;
+  }
+
+  /* La hoja, a pantalla completa y sin sombra ni recuadro */
+  .hoja {
+    box-shadow: none;
+    max-width: none;
+    width: 100%;
+    padding: 0;
+    font-size: 11pt;
+  }
+
+  /* Tamaño de página A4 con un margen razonable */
+  @page {
+    size: A4;
+    margin: 1.2cm;
+  }
+
+  /* Forzamos que los colores (la cabecera naranja, el nivel de combustible)
+     se impriman en vez de salir en blanco */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
