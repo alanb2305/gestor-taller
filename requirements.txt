@@ -1,6 +1,10 @@
 Flask>=3.0
 reportlab>=4.0
+waitress>=3.0
 
-# Nota: cuando todo funcione, conviene fijar las versiones exactas con:
+# Nota: cuando todo funcione, conviene fijar las versiones EXACTAS con:
 #   pip freeze > requirements.txt
-# Bootstrap y Chart.js NO van aquí: se cargan desde el HTML (CDN o /static).
+# así el tribunal instala justo las mismas que tú.
+#
+# Bootstrap, Bootstrap Icons y Chart.js NO van aquí: son librerías de
+# JavaScript/CSS y se cargan desde el HTML (CDN).

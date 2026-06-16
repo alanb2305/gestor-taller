@@ -1,0 +1,15 @@
+{
+  // Configuración para ejecutar y depurar la app desde VS Code
+  // (botón "Run and Debug" / F5). Arranca app.py en modo desarrollo.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "GestorTaller (desarrollo)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/app.py",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}
