@@ -24,16 +24,17 @@ NOMBRE_APP = "GestorTaller"
 
 # -----------------------------------------------------------------------------
 # Datos del taller.
-# La aplicación es genérica: NO tiene ningún nombre de taller en el código.
-# Para adaptarla a otro taller solo hay que cambiar este diccionario.
-# Estos valores se usarán en las pantallas y en el resguardo en PDF.
+# La aplicación es genérica: NO tiene ningún taller concreto en el código.
+# Los valores de abajo son de EJEMPLO; para usar la app en un taller real solo
+# hay que cambiar este diccionario (no hay que tocar nada más). Estos datos se
+# usan en las pantallas y en el resguardo en PDF.
 # -----------------------------------------------------------------------------
 TALLER = {
-    "nombre":       "TALLERES LUJOSMAR, S.L.",
+    "nombre":       "Taller de Ejemplo, S.L.",
     "lema":         "Servicio Integral del Automóvil",
-    "direccion":    "C.º del Pilón, 17-19 · 50011 Zaragoza",
-    "telefono":     "976 330 695",
-    "fax":          "976 906 058",
-    "email":        "lujosmar@tallereslujosmar.com",
+    "direccion":    "Calle de Ejemplo, 0 · 00000 Ciudad",
+    "telefono":     "000 000 000",
+    "fax":          "000 000 000",
+    "email":        "info@taller-ejemplo.example",
     "coste_diario": "20,00 €",
 }
