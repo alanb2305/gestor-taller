@@ -105,6 +105,26 @@ def buscar(con, texto: str) -> list:
     ).fetchall()
 
 
+def siguiente_estado(estado_actual: str):
+    """
+    Devuelve el estado que va justo después del actual en el ciclo de trabajo
+    (recibido -> en reparación -> terminado -> entregado), o None si la ficha
+    ya está en el último estado ('entregado').
+
+    Lo usa el botón de "avanzar estado" del historial: el orden es el de la
+    tupla ESTADOS, así que el siguiente es simplemente el de la posición + 1.
+    """
+    try:
+        posicion = ESTADOS.index(estado_actual)
+    except ValueError:
+        # Estado desconocido (no debería pasar: la columna tiene un CHECK en
+        # el esquema). Por si acaso, no proponemos ningún avance.
+        return None
+    if posicion + 1 < len(ESTADOS):
+        return ESTADOS[posicion + 1]
+    return None
+
+
 def cambiar_estado(con, incidencia_id: int, nuevo_estado: str) -> None:
     if nuevo_estado not in ESTADOS:
         raise ValueError(f"Estado no válido: {nuevo_estado!r}")

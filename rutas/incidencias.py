@@ -158,7 +158,45 @@ def historial():
     con = obtener_conexion()
     fichas = incidencia.buscar(con, busqueda) if busqueda else incidencia.listar(con)
     con.close()
-    return render_template("historial.html", fichas=fichas, busqueda=busqueda)
+
+    # Para cada estado, cuál es el siguiente. Lo calculamos una vez aquí y la
+    # plantilla lo usa para poner en cada fila el botón "pasar a <siguiente>".
+    siguiente_estado = {e: incidencia.siguiente_estado(e)
+                        for e in incidencia.ESTADOS}
+
+    return render_template("historial.html", fichas=fichas,
+                           busqueda=busqueda, siguiente_estado=siguiente_estado)
+
+
+@bp_incidencias.route("/<int:incidencia_id>/estado", methods=["POST"])
+def avanzar_estado(incidencia_id):
+    """
+    Pasa una ficha al siguiente estado de su ciclo de trabajo
+    (recibido -> en reparación -> terminado -> entregado).
+
+    Es un POST porque cambia datos de la base de datos (con GET no se debe
+    modificar nada). El estado destino lo decide el SERVIDOR a partir del
+    estado actual: el navegador solo puede pedir "avanzar", no elegir a qué
+    estado salta. Después volvemos al historial (patrón Post/Redirect/Get).
+    """
+    con = obtener_conexion()
+    try:
+        fila = incidencia.obtener_completa(con, incidencia_id)
+        if fila is None:
+            abort(404)   # la ficha no existe (id inventado en la URL)
+
+        siguiente = incidencia.siguiente_estado(fila["estado"])
+        if siguiente is not None:
+            incidencia.cambiar_estado(con, incidencia_id, siguiente)
+            con.commit()
+            flash(f"Ficha n.º {incidencia_id:05d} marcada como «{siguiente}».",
+                  "exito")
+        # Si ya estaba en el último estado, no hacemos nada: el botón no se
+        # muestra en ese caso y aquí solo se llegaría manipulando la URL.
+    finally:
+        con.close()
+
+    return redirect(url_for("incidencias.historial"))
 
 
 def _guardar_incidencia(con, datos):

@@ -62,10 +62,26 @@
                 </span>
               </td>
               <td class="text-end">
-                <a href="{{ url_for('incidencias.resguardo', incidencia_id=f.id) }}"
-                   class="btn btn-sm btn-outline-secondary">
-                  <i class="bi bi-eye"></i> Ver
-                </a>
+                <div class="d-inline-flex gap-2">
+                  {# Botón para avanzar al siguiente estado. siguiente_estado lo
+                     pasa la ruta; si la ficha ya está "entregada" vale None y
+                     entonces no se muestra ningún botón. Es un formulario POST
+                     (un enlace sería GET y no debe cambiar datos). #}
+                  {% set sig = siguiente_estado.get(f.estado) %}
+                  {% if sig %}
+                    <form method="post"
+                          action="{{ url_for('incidencias.avanzar_estado', incidencia_id=f.id) }}">
+                      <button type="submit" class="btn btn-sm btn-outline-success"
+                              title="Pasar a «{{ sig }}»">
+                        <i class="bi bi-arrow-right-circle"></i> {{ sig }}
+                      </button>
+                    </form>
+                  {% endif %}
+                  <a href="{{ url_for('incidencias.resguardo', incidencia_id=f.id) }}"
+                     class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-eye"></i> Ver
+                  </a>
+                </div>
               </td>
             </tr>
           {% endfor %}
