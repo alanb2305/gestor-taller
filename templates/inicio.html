@@ -47,13 +47,17 @@
     </div>
 
     <div class="col-12 col-md-4">
-      <div class="card tarjeta-accion tarjeta-inactiva h-100">
-        <div class="card-body text-center">
-          <i class="bi bi-people fs-1"></i>
-          <h2 class="h5 mt-3">Clientes y vehículos</h2>
-          <span class="badge bg-secondary">Próximamente</span>
+      <a href="{{ url_for('clientes.lista') }}" class="text-decoration-none">
+        <div class="card tarjeta-accion h-100">
+          <div class="card-body text-center">
+            <i class="bi bi-people fs-1 text-acento"></i>
+            <h2 class="h5 mt-3">Clientes y vehículos</h2>
+            <p class="text-muted small mb-0">
+              Da de alta, edita o elimina clientes y sus coches.
+            </p>
+          </div>
         </div>
-      </div>
+      </a>
     </div>
 
   </div>

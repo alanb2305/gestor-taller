@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block titulo %}Vehículos · {{ app_nombre }}{% endblock %}
+
+{% block contenido %}
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h4 mb-0">Vehículos</h1>
+    <a href="{{ url_for('vehiculos.nuevo') }}" class="btn btn-principal">
+      <i class="bi bi-plus-circle"></i> Nuevo vehículo
+    </a>
+  </div>
+
+  {% if vehiculos %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Matrícula</th>
+            <th>Marca y modelo</th>
+            <th>Cliente</th>
+            <th class="text-center">Fichas</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in vehiculos %}
+            <tr>
+              <td>{{ v.matricula }}</td>
+              <td>{{ v.marca_modelo }}</td>
+              <td>{{ v.cliente_nombre }}</td>
+              <td class="text-center">{{ v.n_fichas }}</td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-2">
+                  <a href="{{ url_for('vehiculos.editar', vehiculo_id=v.id) }}"
+                     class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-pencil"></i> Editar
+                  </a>
+                  {# Si el coche tiene fichas, no se puede borrar (se perdería el
+                     historial). El botón sale deshabilitado y el servidor lo
+                     impide igualmente. #}
+                  {% if v.n_fichas == 0 %}
+                    <form method="post"
+                          action="{{ url_for('vehiculos.borrar', vehiculo_id=v.id) }}"
+                          onsubmit="return confirm('¿Borrar el vehículo {{ v.matricula }}?');">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i> Borrar
+                      </button>
+                    </form>
+                  {% else %}
+                    <button type="button" class="btn btn-sm btn-outline-danger" disabled
+                            title="Tiene fichas: no se puede borrar">
+                      <i class="bi bi-trash"></i> Borrar
+                    </button>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-light border text-center">
+      Todavía no hay vehículos.
+      <a href="{{ url_for('vehiculos.nuevo') }}">Crea el primero</a>.
+    </div>
+  {% endif %}
+
+{% endblock %}

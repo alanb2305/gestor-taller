@@ -165,3 +165,35 @@ def validar_incidencia(datos):
         errores["kilometros"] = "Los kilómetros deben ser solo números."
 
     return errores
+
+
+# ---------------------------------------------------------------------------
+# Validación de cliente y de vehículo por separado (para la pantalla de
+# gestión: alta y edición). Mismas reglas de formato que la ficha; devuelven
+# un diccionario {campo: mensaje}, igual que validar_incidencia().
+# ---------------------------------------------------------------------------
+
+def validar_cliente(datos):
+    errores = {}
+    if not datos.get("nombre", "").strip():
+        errores["nombre"] = "El nombre es obligatorio."
+    if not validar_documento(datos.get("cif", "")):
+        errores["cif"] = "El DNI/NIF/CIF no es válido."
+    if not validar_telefono(datos.get("telefono", "")):
+        errores["telefono"] = "El teléfono debe tener 9 dígitos y empezar por 6, 7, 8 o 9."
+    if not validar_cp(datos.get("cp", "")):
+        errores["cp"] = "El código postal debe tener 5 dígitos."
+    return errores
+
+
+def validar_vehiculo(datos):
+    # Solo el formato. Que la matrícula no esté repetida y que el cliente
+    # exista se comprueban en la ruta, porque dependen de la base de datos.
+    errores = {}
+    if not datos.get("matricula", "").strip():
+        errores["matricula"] = "La matrícula es obligatoria."
+    elif not validar_matricula(datos["matricula"]):
+        errores["matricula"] = "La matrícula no tiene un formato español válido."
+    if not datos.get("marca_modelo", "").strip():
+        errores["marca_modelo"] = "La marca y el modelo son obligatorios."
+    return errores

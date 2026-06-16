@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block titulo %}Clientes · {{ app_nombre }}{% endblock %}
+
+{% block contenido %}
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h4 mb-0">Clientes</h1>
+    <a href="{{ url_for('clientes.nuevo') }}" class="btn btn-principal">
+      <i class="bi bi-person-plus"></i> Nuevo cliente
+    </a>
+  </div>
+
+  {% if clientes %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>DNI/CIF</th>
+            <th>Teléfono</th>
+            <th>Población</th>
+            <th class="text-center">Coches</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in clientes %}
+            <tr>
+              <td>{{ c.nombre }}</td>
+              <td>{{ c.cif }}</td>
+              <td>{{ c.telefono }}</td>
+              <td>{{ c.poblacion }}</td>
+              <td class="text-center">{{ c.n_vehiculos }}</td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-2">
+                  <a href="{{ url_for('clientes.editar', cliente_id=c.id) }}"
+                     class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-pencil"></i> Editar
+                  </a>
+                  {# Borrar es un POST (cambia datos) y pide confirmación. Si el
+                     cliente tiene coches, el botón sale deshabilitado: el
+                     servidor también lo impediría, pero así se ve antes. #}
+                  {% if c.n_vehiculos == 0 %}
+                    <form method="post"
+                          action="{{ url_for('clientes.borrar', cliente_id=c.id) }}"
+                          onsubmit="return confirm('¿Borrar a {{ c.nombre }}?');">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i> Borrar
+                      </button>
+                    </form>
+                  {% else %}
+                    <button type="button" class="btn btn-sm btn-outline-danger" disabled
+                            title="Tiene coches: no se puede borrar">
+                      <i class="bi bi-trash"></i> Borrar
+                    </button>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-light border text-center">
+      Todavía no hay clientes.
+      <a href="{{ url_for('clientes.nuevo') }}">Crea el primero</a>.
+    </div>
+  {% endif %}
+
+{% endblock %}

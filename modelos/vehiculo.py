@@ -79,3 +79,53 @@ def listar_todos_con_cliente(con) -> list:
              JOIN clientes  c ON c.id = v.cliente_id
             ORDER BY v.matricula"""
     ).fetchall()
+
+
+def obtener_por_id(con, vehiculo_id: int):
+    """Devuelve el vehículo con ese id, o None. Lo usa la edición."""
+    return con.execute(
+        "SELECT * FROM vehiculos WHERE id = ?", (vehiculo_id,)
+    ).fetchone()
+
+
+def actualizar(con, vehiculo_id: int, marca_modelo: str, cliente_id: int) -> None:
+    """
+    Actualiza la marca/modelo y el dueño de un vehículo. La matrícula NO se
+    cambia: es lo que identifica al coche.
+    """
+    con.execute(
+        "UPDATE vehiculos SET marca_modelo = ?, cliente_id = ? WHERE id = ?",
+        (marca_modelo, cliente_id, vehiculo_id),
+    )
+
+
+def borrar(con, vehiculo_id: int) -> None:
+    """Borra un vehículo. Quien llama comprueba antes que no tenga fichas."""
+    con.execute("DELETE FROM vehiculos WHERE id = ?", (vehiculo_id,))
+
+
+def contar_por_cliente(con, cliente_id: int) -> int:
+    """Cuántos vehículos tiene un cliente. Sirve para no borrar clientes con coches."""
+    return con.execute(
+        "SELECT COUNT(*) FROM vehiculos WHERE cliente_id = ?", (cliente_id,)
+    ).fetchone()[0]
+
+
+def listar_con_resumen(con) -> list:
+    """
+    Todos los vehículos con su dueño y cuántas fichas tienen, para la pantalla
+    de gestión. LEFT JOIN con incidencias para contar 0 en los que no tienen.
+    """
+    return con.execute(
+        """SELECT v.id            AS id,
+                  v.matricula     AS matricula,
+                  v.marca_modelo  AS marca_modelo,
+                  v.cliente_id    AS cliente_id,
+                  c.nombre        AS cliente_nombre,
+                  COUNT(i.id)     AS n_fichas
+             FROM vehiculos   v
+             JOIN clientes    c ON c.id = v.cliente_id
+             LEFT JOIN incidencias i ON i.vehiculo_id = v.id
+            GROUP BY v.id
+            ORDER BY v.matricula"""
+    ).fetchall()

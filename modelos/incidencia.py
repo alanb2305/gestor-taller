@@ -188,6 +188,13 @@ def clientes_con_mas_visitas(con, limite: int = 5) -> list:
     return [(fila["nombre"], fila["total"]) for fila in filas]
 
 
+def contar_por_vehiculo(con, vehiculo_id: int) -> int:
+    """Cuántas fichas tiene un vehículo. Sirve para no borrar coches con historial."""
+    return con.execute(
+        "SELECT COUNT(*) FROM incidencias WHERE vehiculo_id = ?", (vehiculo_id,)
+    ).fetchone()[0]
+
+
 def listar_completo(con) -> list:
     """
     Todas las fichas con TODOS sus datos (vehículo, cliente y las reparaciones

@@ -13,6 +13,8 @@ from modelos.conexion import inicializar_bd
 from rutas.principal import bp_principal
 from rutas.incidencias import bp_incidencias
 from rutas.datos import bp_datos
+from rutas.clientes import bp_clientes
+from rutas.vehiculos import bp_vehiculos
 
 app = Flask(__name__)
 
@@ -57,6 +59,8 @@ def fecha_es(iso):
 app.register_blueprint(bp_principal)
 app.register_blueprint(bp_incidencias)
 app.register_blueprint(bp_datos)
+app.register_blueprint(bp_clientes)
+app.register_blueprint(bp_vehiculos)
 
 
 if __name__ == "__main__":
