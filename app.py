@@ -12,6 +12,7 @@ from config import NOMBRE_APP, CLAVE_SECRETA, TALLER
 from modelos.conexion import inicializar_bd
 from rutas.principal import bp_principal
 from rutas.incidencias import bp_incidencias
+from rutas.datos import bp_datos
 
 app = Flask(__name__)
 
@@ -55,6 +56,7 @@ def fecha_es(iso):
 # proyecto añadiremos las de clientes, vehículos, etc.
 app.register_blueprint(bp_principal)
 app.register_blueprint(bp_incidencias)
+app.register_blueprint(bp_datos)
 
 
 if __name__ == "__main__":

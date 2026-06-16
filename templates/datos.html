@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block titulo %}Importar / Exportar (CSV) · {{ app_nombre }}{% endblock %}
+
+{% block contenido %}
+
+  <h1 class="h4 mb-4">Importar / Exportar datos (CSV)</h1>
+
+  <p class="text-muted">
+    Descarga los datos en CSV para abrirlos en Excel (o similar), o sube un CSV
+    para cargarlos en la aplicación. Los archivos usan punto y coma
+    (<code>;</code>) como separador y codificación UTF-8, que es lo que Excel en
+    español espera.
+  </p>
+
+  {# ==================== EXPORTAR ==================== #}
+  <div class="card mb-4">
+    <div class="card-header">Exportar a CSV</div>
+    <div class="card-body">
+      <p class="small text-muted mb-3">Descarga el listado completo de cada cosa.</p>
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('datos.exportar_clientes') }}" class="btn btn-principal">
+          <i class="bi bi-download"></i> Clientes
+        </a>
+        <a href="{{ url_for('datos.exportar_vehiculos') }}" class="btn btn-principal">
+          <i class="bi bi-download"></i> Vehículos
+        </a>
+        <a href="{{ url_for('datos.exportar_historial') }}" class="btn btn-principal">
+          <i class="bi bi-download"></i> Historial de fichas
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {# ==================== IMPORTAR ==================== #}
+  <div class="card mb-4">
+    <div class="card-header">Importar desde CSV</div>
+    <div class="card-body">
+
+      {# Cada formulario sube un archivo (enctype multipart) al endpoint que le
+         corresponde. El name del input es "archivo", que es el que lee la ruta. #}
+
+      <div class="row g-4">
+
+        <div class="col-12 col-lg-4">
+          <h2 class="h6">Clientes</h2>
+          <p class="small text-muted">
+            Columnas: <code>nombre; cif; telefono; domicilio; numero; cp; poblacion</code>.
+            Si el CIF ya existe, se actualiza ese cliente; si no, se da de alta.
+          </p>
+          <form method="post" action="{{ url_for('datos.importar_clientes') }}"
+                enctype="multipart/form-data" class="d-flex flex-column gap-2">
+            <input type="file" name="archivo" accept=".csv" required class="form-control">
+            <button type="submit" class="btn btn-outline-secondary">
+              <i class="bi bi-upload"></i> Importar clientes
+            </button>
+          </form>
+        </div>
+
+        <div class="col-12 col-lg-4">
+          <h2 class="h6">Vehículos</h2>
+          <p class="small text-muted">
+            Columnas: <code>matricula; marca_modelo; cif_cliente</code>.
+            El cliente (por su CIF) tiene que existir ya; importa antes los
+            clientes si hace falta.
+          </p>
+          <form method="post" action="{{ url_for('datos.importar_vehiculos') }}"
+                enctype="multipart/form-data" class="d-flex flex-column gap-2">
+            <input type="file" name="archivo" accept=".csv" required class="form-control">
+            <button type="submit" class="btn btn-outline-secondary">
+              <i class="bi bi-upload"></i> Importar vehículos
+            </button>
+          </form>
+        </div>
+
+        <div class="col-12 col-lg-4">
+          <h2 class="h6">Historial de fichas</h2>
+          <p class="small text-muted">
+            Trae cliente, vehículo y ficha en cada línea (las reparaciones, en
+            una celda separadas por <code>|</code>). Crea el cliente y el coche
+            si no existían. Cada línea añade una ficha.
+          </p>
+          <form method="post" action="{{ url_for('datos.importar_historial') }}"
+                enctype="multipart/form-data" class="d-flex flex-column gap-2">
+            <input type="file" name="archivo" accept=".csv" required class="form-control">
+            <button type="submit" class="btn btn-outline-secondary">
+              <i class="bi bi-upload"></i> Importar historial
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+      <p class="small text-muted mt-3 mb-0">
+        Consejo: la forma más sencilla de ver el formato exacto es exportar
+        primero, abrir el CSV en Excel, y usar esas mismas columnas al importar.
+      </p>
+    </div>
+  </div>
+
+{% endblock %}

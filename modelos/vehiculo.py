@@ -63,3 +63,19 @@ def datos_para_autorrelleno(con, matricula: str):
             WHERE v.matricula = ?""",
         (matricula,),
     ).fetchone()
+
+
+def listar_todos_con_cliente(con) -> list:
+    """
+    Todos los vehículos junto con el CIF de su dueño, para la exportación a CSV.
+    Usamos el CIF (no el id interno, que cambia de una base de datos a otra)
+    como forma de volver a enlazar cada coche con su cliente al importar.
+    """
+    return con.execute(
+        """SELECT v.matricula     AS matricula,
+                  v.marca_modelo  AS marca_modelo,
+                  c.cif           AS cif_cliente
+             FROM vehiculos v
+             JOIN clientes  c ON c.id = v.cliente_id
+            ORDER BY v.matricula"""
+    ).fetchall()

@@ -87,3 +87,18 @@ def buscar_por_nombre(con, texto: str) -> list:
         "SELECT * FROM clientes WHERE nombre LIKE ? ORDER BY nombre",
         (patron,),
     ).fetchall()
+
+
+def listar_todos(con) -> list:
+    """Todos los clientes, ordenados por nombre. Lo usa la exportación a CSV."""
+    return con.execute("SELECT * FROM clientes ORDER BY nombre").fetchall()
+
+
+def obtener_por_cif(con, cif: str):
+    """
+    Devuelve el cliente con ese CIF/DNI, o None. Lo usa la importación para
+    saber si un cliente ya existe (y entonces actualizarlo en vez de duplicarlo).
+    """
+    return con.execute(
+        "SELECT * FROM clientes WHERE cif = ?", (cif,)
+    ).fetchone()

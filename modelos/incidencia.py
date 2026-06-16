@@ -186,3 +186,37 @@ def clientes_con_mas_visitas(con, limite: int = 5) -> list:
         (limite,),
     ).fetchall()
     return [(fila["nombre"], fila["total"]) for fila in filas]
+
+
+def listar_completo(con) -> list:
+    """
+    Todas las fichas con TODOS sus datos (vehículo, cliente y las reparaciones
+    juntas en una sola celda separadas por '|'), para exportar el historial a
+    CSV. group_concat es de SQLite: junta en un solo texto las varias
+    reparaciones de una misma ficha.
+    """
+    return con.execute(
+        """SELECT i.id             AS numero_ficha,
+                  i.fecha_entrada  AS fecha_entrada,
+                  i.fecha_entrega  AS fecha_entrega,
+                  i.estado         AS estado,
+                  v.matricula      AS matricula,
+                  v.marca_modelo   AS marca_modelo,
+                  i.kilometros     AS kilometros,
+                  i.combustible    AS combustible,
+                  i.recoger_piezas AS recoger_piezas,
+                  c.nombre         AS nombre,
+                  c.cif            AS cif,
+                  c.telefono       AS telefono,
+                  c.domicilio      AS domicilio,
+                  c.numero         AS numero,
+                  c.cp             AS cp,
+                  c.poblacion      AS poblacion,
+                  (SELECT group_concat(r.descripcion, '|')
+                     FROM reparaciones r
+                    WHERE r.incidencia_id = i.id) AS reparaciones
+             FROM incidencias i
+             JOIN vehiculos    v ON v.id = i.vehiculo_id
+             JOIN clientes     c ON c.id = v.cliente_id
+            ORDER BY i.id"""
+    ).fetchall()
