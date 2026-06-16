@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block titulo %}Nueva ficha de depósito · {{ app_nombre }}{% endblock %}
+
+{% block contenido %}
+
+  <h1 class="h4 mb-4">Nueva ficha de depósito</h1>
+
+  {# novalidate desactiva la validación automática del navegador para que sea
+     la nuestra (JavaScript + servidor) la que controle los mensajes y no
+     salgan dos avisos distintos. El id lo usa validaciones.js. #}
+  <form method="post" action="{{ url_for('incidencias.nueva') }}"
+        id="form-incidencia" novalidate>
+
+    {# ==================== FECHAS ==================== #}
+    <div class="card mb-4">
+      <div class="card-header">Fechas</div>
+      <div class="card-body">
+        <div class="row g-3">
+
+          <div class="col-12 col-md-6">
+            <label for="fecha_entrada" class="form-label">Fecha de entrada *</label>
+            <input type="date" id="fecha_entrada" name="fecha_entrada"
+                   value="{{ datos.fecha_entrada }}"
+                   class="form-control {% if errores.fecha_entrada %}is-invalid{% endif %}">
+            <div class="invalid-feedback">{{ errores.fecha_entrada }}</div>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label for="fecha_entrega" class="form-label">Entrega prevista *</label>
+            <input type="date" id="fecha_entrega" name="fecha_entrega"
+                   value="{{ datos.fecha_entrega }}"
+                   class="form-control {% if errores.fecha_entrega %}is-invalid{% endif %}">
+            <div class="invalid-feedback">{{ errores.fecha_entrega }}</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    {# ==================== CLIENTE ==================== #}
+    <div class="card mb-4">
+      <div class="card-header">Datos del cliente</div>
+      <div class="card-body">
+        <div class="row g-3">
+
+          <div class="col-12 col-md-8">
+            <label for="nombre" class="form-label">Nombre y apellidos *</label>
+            <input type="text" id="nombre" name="nombre"
+                   value="{{ datos.nombre }}"
+                   class="form-control {% if errores.nombre %}is-invalid{% endif %}">
+            <div class="invalid-feedback">{{ errores.nombre }}</div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label for="cif" class="form-label">DNI / NIE / CIF</label>
+            <input type="text" id="cif" name="cif"
+                   value="{{ datos.cif }}"
+                   class="form-control text-uppercase {% if errores.cif %}is-invalid{% endif %}">
+            <div class="invalid-feedback">{{ errores.cif }}</div>
+          </div>
+
+          <div class="col-12 col-md-8">
+            <label for="domicilio" class="form-label">Domicilio</label>
+            <input type="text" id="domicilio" name="domicilio"
+                   value="{{ datos.domicilio }}" class="form-control">
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label for="numero" class="form-label">Número</label>
+            <input type="text" id="numero" name="numero"
+                   value="{{ datos.numero }}" class="form-control">
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label for="cp" class="form-label">Código postal</label>
+            <input type="text" id="cp" name="cp" inputmode="numeric" maxlength="5"
+                   value="{{ datos.cp }}"
+                   class="form-control {% if errores.cp %}is-invalid{% endif %}">
+            <div class="invalid-feedback">{{ errores.cp }}</div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label for="poblacion" class="form-label">Población</label>
+            <input type="text" id="poblacion" name="poblacion"
+                   value="{{ datos.poblacion }}" class="form-control">
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label for="telefono" class="form-label">Teléfono</label>
+            <input type="tel" id="telefono" name="telefono" inputmode="numeric"
+                   value="{{ datos.telefono }}"
+                   class="form-control {% if errores.telefono %}is-invalid{% endif %}">
+            <div class="invalid-feedback">{{ errores.telefono }}</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    {# ==================== VEHÍCULO ==================== #}
+    <div class="card mb-4">
+      <div class="card-header">Datos del vehículo</div>
+      <div class="card-body">
+        <div class="row g-3">
+
+          <div class="col-12 col-md-6">
+            <label for="marca_modelo" class="form-label">Marca y modelo *</label>
+            <input type="text" id="marca_modelo" name="marca_modelo"
+                   value="{{ datos.marca_modelo }}"
+                   class="form-control {% if errores.marca_modelo %}is-invalid{% endif %}">
+            <div class="invalid-feedback">{{ errores.marca_modelo }}</div>
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label for="matricula" class="form-label">Matrícula *</label>
+            <input type="text" id="matricula" name="matricula"
+                   value="{{ datos.matricula }}"
+                   class="form-control text-uppercase {% if errores.matricula %}is-invalid{% endif %}">
+            <div class="invalid-feedback">{{ errores.matricula }}</div>
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label for="kilometros" class="form-label">Kilómetros</label>
+            <input type="text" id="kilometros" name="kilometros" inputmode="numeric"
+                   value="{{ datos.kilometros }}"
+                   class="form-control {% if errores.kilometros %}is-invalid{% endif %}">
+            <div class="invalid-feedback">{{ errores.kilometros }}</div>
+          </div>
+
+          {# Nivel de combustible: botones tipo radio (btn-check). Solo se puede
+             elegir uno y se envía con el name "combustible". #}
+          <div class="col-12">
+            <label class="form-label d-block">Nivel de combustible</label>
+            <div class="btn-group" role="group" aria-label="Nivel de combustible">
+              {% for nivel in ["0", "1/4", "1/2", "3/4", "4/4"] %}
+                <input type="radio" class="btn-check" name="combustible"
+                       id="comb_{{ loop.index }}" value="{{ nivel }}"
+                       {% if datos.combustible == nivel %}checked{% endif %}>
+                <label class="btn btn-outline-secondary" for="comb_{{ loop.index }}">
+                  {{ nivel }}
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    {# ==================== REPARACIONES ==================== #}
+    <div class="card mb-4">
+      <div class="card-header">Trabajos a realizar</div>
+      <div class="card-body">
+        <p class="text-muted small">
+          Describe los trabajos solicitados (una línea por trabajo).
+        </p>
+
+        {# 5 líneas, igual que en el resguardo en papel. Todas se llaman
+           "reparacion": en el servidor se recogen juntas con getlist() y las
+           vacías se descartan al generar el resguardo. #}
+        {% for linea in datos.reparaciones %}
+          <input type="text" name="reparacion" value="{{ linea }}"
+                 class="form-control mb-2" placeholder="Trabajo {{ loop.index }}">
+        {% endfor %}
+      </div>
+    </div>
+
+    {# ==================== PIEZAS ==================== #}
+    <div class="card mb-4">
+      <div class="card-header">Piezas sustituidas</div>
+      <div class="card-body">
+        <label class="form-label d-block">¿El cliente desea recoger las piezas sustituidas?</label>
+        {% for opcion in ["No", "Sí"] %}
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="recoger_piezas"
+                   id="piezas_{{ loop.index }}" value="{{ opcion }}"
+                   {% if datos.recoger_piezas == opcion %}checked{% endif %}>
+            <label class="form-check-label" for="piezas_{{ loop.index }}">{{ opcion }}</label>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# ==================== BOTONES ==================== #}
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-principal">
+        <i class="bi bi-file-earmark-text"></i> Generar resguardo
+      </button>
+      <a href="{{ url_for('principal.inicio') }}" class="btn btn-outline-secondary">
+        Cancelar
+      </a>
+    </div>
+
+  </form>
+
+{% endblock %}
+
+{% block scripts %}
+  {# Validación en el navegador: solo es comodidad para el usuario; la de
+     verdad se hace en el servidor (servicios/validaciones.py). #}
+  <script src="{{ url_for('static', filename='js/validaciones.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,58 @@
+{# Hereda toda la estructura (cabecera, pie, estilos) de base.html. #}
+{% extends "base.html" %}
+
+{% block titulo %}Inicio · {{ app_nombre }}{% endblock %}
+
+{% block contenido %}
+
+  {# -------------------- Bienvenida -------------------- #}
+  <div class="bloque-bienvenida text-center mb-5">
+    <h1 class="h3 mb-1">{{ taller.nombre }}</h1>
+    {% if taller.lema %}
+      <p class="text-muted mb-0">{{ taller.lema }}</p>
+    {% endif %}
+  </div>
+
+  {# -------------------- Tarjetas de acceso -------------------- #}
+  {# Solo la primera está activa. Las otras dos quedan marcadas como
+     "Próximamente" porque corresponden a la parte de base de datos
+     (clientes/vehículos y el historial), que desarrollamos después. #}
+  <div class="row g-4 justify-content-center">
+
+    <div class="col-12 col-md-4">
+      <a href="{{ url_for('incidencias.nueva') }}" class="text-decoration-none">
+        <div class="card tarjeta-accion h-100">
+          <div class="card-body text-center">
+            <i class="bi bi-file-earmark-plus fs-1 text-acento"></i>
+            <h2 class="h5 mt-3">Nueva ficha de depósito</h2>
+            <p class="text-muted small mb-0">
+              Rellena los datos del cliente y del vehículo y genera el resguardo.
+            </p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-12 col-md-4">
+      <div class="card tarjeta-accion tarjeta-inactiva h-100">
+        <div class="card-body text-center">
+          <i class="bi bi-people fs-1"></i>
+          <h2 class="h5 mt-3">Clientes y vehículos</h2>
+          <span class="badge bg-secondary">Próximamente</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+      <div class="card tarjeta-accion tarjeta-inactiva h-100">
+        <div class="card-body text-center">
+          <i class="bi bi-clock-history fs-1"></i>
+          <h2 class="h5 mt-3">Historial de fichas</h2>
+          <span class="badge bg-secondary">Próximamente</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+{% endblock %}
