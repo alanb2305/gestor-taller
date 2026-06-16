@@ -102,3 +102,23 @@ def obtener_por_cif(con, cif: str):
     return con.execute(
         "SELECT * FROM clientes WHERE cif = ?", (cif,)
     ).fetchone()
+
+
+def borrar(con, cliente_id: int) -> None:
+    """Borra un cliente. Quien llama comprueba antes que no tenga vehículos."""
+    con.execute("DELETE FROM clientes WHERE id = ?", (cliente_id,))
+
+
+def listar_con_resumen(con) -> list:
+    """
+    Todos los clientes con cuántos vehículos tiene cada uno, para la pantalla
+    de gestión. El LEFT JOIN hace que los clientes sin coches salgan con 0
+    (con un JOIN normal no aparecerían).
+    """
+    return con.execute(
+        """SELECT c.*, COUNT(v.id) AS n_vehiculos
+             FROM clientes c
+             LEFT JOIN vehiculos v ON v.cliente_id = c.id
+            GROUP BY c.id
+            ORDER BY c.nombre"""
+    ).fetchall()
