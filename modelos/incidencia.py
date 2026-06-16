@@ -64,6 +64,20 @@ def obtener_completa(con, incidencia_id: int):
     ).fetchone()
 
 
+def obtener_estado(con, incidencia_id: int):
+    """
+    Devuelve solo el estado de una incidencia, o None si no existe.
+    Lo usa avanzar_estado: para calcular el siguiente estado no hacen falta los
+    datos del cliente ni del vehículo, solo saber en qué estado está, así que
+    nos ahorramos los JOIN de obtener_completa().
+    """
+    fila = con.execute(
+        "SELECT estado FROM incidencias WHERE id = ?",
+        (incidencia_id,),
+    ).fetchone()
+    return fila["estado"] if fila else None
+
+
 def listar(con, limite: int = 50) -> list:
     """Últimas incidencias (las más recientes primero) para el historial."""
     return con.execute(
@@ -83,8 +97,12 @@ def listar(con, limite: int = 50) -> list:
     ).fetchall()
 
 
-def buscar(con, texto: str) -> list:
-    """Busca incidencias por matrícula, nombre del cliente o fecha de entrada."""
+def buscar(con, texto: str, limite: int = 50) -> list:
+    """
+    Busca incidencias por matrícula, nombre del cliente o fecha de entrada.
+    Lleva LIMIT, igual que listar(), para no traer un historial enorme de
+    golpe si la búsqueda coincide con muchas fichas.
+    """
     patron = f"%{texto}%"
     return con.execute(
         """SELECT i.id            AS id,
@@ -100,8 +118,9 @@ def buscar(con, texto: str) -> list:
             WHERE v.matricula     LIKE ?
                OR c.nombre        LIKE ?
                OR i.fecha_entrada LIKE ?
-            ORDER BY i.id DESC""",
-        (patron, patron, patron),
+            ORDER BY i.id DESC
+            LIMIT ?""",
+        (patron, patron, patron, limite),
     ).fetchall()
 
 

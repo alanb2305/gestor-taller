@@ -21,6 +21,21 @@ _LETRAS_DNI = "TRWAGMYFPDXBNJZSQVHLCKE"
 
 
 # ---------------------------------------------------------------------------
+# Normalización (no es una validación, pero va de la mano de la matrícula).
+# ---------------------------------------------------------------------------
+
+def normalizar_matricula(texto):
+    """
+    Deja una matrícula en forma canónica: en mayúsculas y sin guiones ni
+    espacios, para que '1234-bcd' o '1234 BCD' se traten como la misma.
+    La usan el formulario, la gestión de vehículos, el autorrelleno y la
+    importación de CSV; así la normalización está en un único sitio y no
+    repetida por todo el código.
+    """
+    return (texto or "").upper().replace("-", "").replace(" ", "")
+
+
+# ---------------------------------------------------------------------------
 # Validaciones de cada campo por separado. Devuelven True/False.
 # Si un campo es opcional y está vacío, lo damos por bueno (True): la
 # obligatoriedad se comprueba aparte, en validar_incidencia().
@@ -67,7 +82,7 @@ def validar_matricula(texto):
     """
     if not texto:
         return True
-    t = texto.upper().replace("-", "").replace(" ", "")
+    t = normalizar_matricula(texto)
     nueva   = re.fullmatch(r"\d{4}[BCDFGHJKLMNPRSTVWXYZ]{3}", t)
     antigua = re.fullmatch(r"[A-Z]{1,2}\d{4}[A-Z]{1,2}", t)
     return bool(nueva or antigua)

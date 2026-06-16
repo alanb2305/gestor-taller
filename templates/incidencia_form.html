@@ -156,16 +156,32 @@
       <div class="card-header">Trabajos a realizar</div>
       <div class="card-body">
         <p class="text-muted small">
-          Describe los trabajos solicitados (una línea por trabajo).
+          Describe los trabajos solicitados (una línea por trabajo). Usa el
+          botón «Añadir trabajo» para poner tantas líneas como necesites.
         </p>
 
-        {# 5 líneas, igual que en el resguardo en papel. Todas se llaman
-           "reparacion": en el servidor se recogen juntas con getlist() y las
-           vacías se descartan al generar el resguardo. #}
-        {% for linea in datos.reparaciones %}
-          <input type="text" name="reparacion" value="{{ linea }}"
-                 class="form-control mb-2" placeholder="Trabajo {{ loop.index }}">
-        {% endfor %}
+        {# Contenedor de las líneas de trabajo. Todas se llaman "reparacion":
+           en el servidor se recogen juntas con getlist() y las vacías se
+           descartan. Las filas las añade y las quita trabajos.js con los
+           botones + y la papelera. "datos.reparaciones or ['']" garantiza que,
+           aunque no venga ninguna (o falle el JavaScript), siempre se vea al
+           menos una línea para escribir. #}
+        <div id="lista-trabajos">
+          {% for linea in datos.reparaciones or [''] %}
+            <div class="input-group mb-2 fila-trabajo">
+              <input type="text" name="reparacion" value="{{ linea }}"
+                     class="form-control" placeholder="Trabajo {{ loop.index }}">
+              <button type="button" class="btn btn-outline-secondary quitar-trabajo"
+                      title="Quitar este trabajo">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          {% endfor %}
+        </div>
+
+        <button type="button" id="anadir-trabajo" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-plus-lg"></i> Añadir trabajo
+        </button>
       </div>
     </div>
 
@@ -206,4 +222,6 @@
   {# Autorrelleno: al teclear una matrícula ya registrada, trae del servidor
      los datos del cliente y del vehículo y los pone en el formulario. #}
   <script src="{{ url_for('static', filename='js/autorrelleno.js') }}"></script>
+  {# Trabajos: botones + y papelera para añadir y quitar líneas de trabajo. #}
+  <script src="{{ url_for('static', filename='js/trabajos.js') }}"></script>
 {% endblock %}
