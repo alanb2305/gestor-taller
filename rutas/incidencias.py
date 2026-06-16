@@ -1,18 +1,22 @@
 """
 Rutas de las incidencias (las órdenes de trabajo / resguardos de depósito).
 
-Aquí está el formulario para dar de alta una incidencia y la generación del
-resguardo en pantalla.
+Aquí está el alta de una ficha (el formulario), el guardado en la base de
+datos, la vista del resguardo ya relleno y el historial de fichas.
 
-De momento NO guardamos nada en la base de datos: el formulario se valida y,
-si todo es correcto, se muestra el resguardo ya relleno y listo para imprimir.
-El guardado en la BD lo añadimos en el siguiente bloque del proyecto.
+Al guardar seguimos el orden "comprobar primero, escribir después": primero
+validamos en el servidor y, solo si todo está bien, abrimos la conexión y
+escribimos. Todo el guardado va dentro de una única transacción: o se graba
+el cliente, el vehículo, la incidencia y sus reparaciones, o no se graba nada.
 """
 
 from datetime import date, timedelta
 
-from flask import Blueprint, render_template, request
+from flask import (Blueprint, render_template, request,
+                   redirect, url_for, flash, abort)
 
+from modelos.conexion import obtener_conexion
+from modelos import cliente, vehiculo, incidencia, reparacion
 from servicios.validaciones import validar_incidencia
 
 # url_prefix: todas las rutas de este blueprint empiezan por /incidencias.
@@ -43,49 +47,121 @@ def _valores_por_defecto():
         "kilometros":     "",
         "combustible":    "1/2",
         "recoger_piezas": "No",
-        # 5 líneas de reparación vacías (como las 5 líneas del formulario en papel).
         "reparaciones":   ["", "", "", "", ""],
     }
 
 
 @bp_incidencias.route("/nueva", methods=["GET", "POST"])
 def nueva():
-    # GET: mostramos el formulario con los valores por defecto.
+    # GET: formulario con los valores por defecto.
     if request.method == "GET":
-        return render_template(
-            "incidencia_form.html",
-            datos=_valores_por_defecto(),
-            errores={},
-        )
+        return render_template("incidencia_form.html",
+                               datos=_valores_por_defecto(), errores={})
 
-    # POST: el usuario ha pulsado "Generar resguardo".
-    # 1) Recogemos lo que ha escrito y lo dejamos en un diccionario normal.
+    # POST: recogemos lo escrito y lo validamos en el servidor (esta es la
+    # validación que cuenta; la del navegador solo avisa antes de enviar).
     datos = _leer_formulario(request.form)
-
-    # 2) Lo validamos en el servidor (esta es la validación que de verdad
-    #    cuenta; la del navegador solo avisa antes, pero no nos fiamos de ella).
     errores = validar_incidencia(datos)
-
-    # 3) Si hay errores, volvemos a mostrar el formulario con lo que ya había
-    #    escrito y los mensajes de error junto a cada campo.
     if errores:
-        return render_template(
-            "incidencia_form.html",
-            datos=datos,
-            errores=errores,
-        )
+        # Volvemos al formulario conservando lo escrito y los mensajes de error.
+        return render_template("incidencia_form.html",
+                               datos=datos, errores=errores)
 
-    # 4) Si todo está bien: nos quedamos solo con las líneas de reparación
-    #    que llevan texto y mostramos el resguardo relleno.
+    # Nos quedamos solo con las líneas de reparación que llevan texto.
     datos["reparaciones"] = [linea for linea in datos["reparaciones"] if linea]
+
+    # Guardado dentro de una transacción.
+    con = obtener_conexion()
+    try:
+        incidencia_id = _guardar_incidencia(con, datos)
+        con.commit()
+    except Exception:
+        # Si algo falla a mitad, deshacemos para no dejar datos a medias.
+        con.rollback()
+        flash("No se ha podido guardar la ficha. Inténtalo de nuevo.", "error")
+        return render_template("incidencia_form.html",
+                               datos=datos, errores={})
+    finally:
+        con.close()
+
+    # Patrón Post/Redirect/Get: después de guardar redirigimos a la vista del
+    # resguardo en vez de devolver el HTML directamente. Así, si el usuario
+    # recarga la página, NO se vuelve a guardar otra ficha repetida.
+    flash("Ficha guardada correctamente.", "exito")
+    return redirect(url_for("incidencias.resguardo", incidencia_id=incidencia_id))
+
+
+@bp_incidencias.route("/<int:incidencia_id>")
+def resguardo(incidencia_id):
+    """Muestra el resguardo de una ficha ya guardada, listo para imprimir."""
+    con = obtener_conexion()
+    fila = incidencia.obtener_completa(con, incidencia_id)
+    lineas = reparacion.listar_por_incidencia(con, incidencia_id)
+    con.close()
+
+    if fila is None:
+        abort(404)   # la ficha no existe (id inventado en la URL)
+
+    # La plantilla trabaja con un diccionario; convertimos la fila de la base
+    # de datos y le añadimos las reparaciones como una lista de textos.
+    datos = dict(fila)
+    datos["reparaciones"] = [linea["descripcion"] for linea in lineas]
     return render_template("resguardo.html", datos=datos)
+
+
+@bp_incidencias.route("/historial")
+def historial():
+    """
+    Lista de fichas guardadas. Si llega el parámetro de búsqueda 'q', filtra
+    por matrícula, nombre o fecha; si no, muestra las últimas.
+    """
+    busqueda = request.args.get("q", "").strip()
+    con = obtener_conexion()
+    fichas = incidencia.buscar(con, busqueda) if busqueda else incidencia.listar(con)
+    con.close()
+    return render_template("historial.html", fichas=fichas, busqueda=busqueda)
+
+
+def _guardar_incidencia(con, datos):
+    """
+    Graba una ficha completa y devuelve el id de la incidencia creada.
+
+    La matrícula identifica al coche (es UNIQUE en la tabla): si ya existe,
+    reaprovechamos ese vehículo y, con él, su cliente; si no, creamos cliente
+    nuevo y vehículo nuevo. Después va la incidencia y sus reparaciones.
+
+    De momento, si la matrícula ya existe NO actualizamos los datos del
+    cliente con lo que se haya tecleado: nos fiamos de lo que ya hay guardado.
+    Actualizarlos queda como mejora, de la mano del autorrelleno.
+    """
+    veh = vehiculo.obtener_por_matricula(con, datos["matricula"])
+    if veh:
+        vehiculo_id = veh["id"]
+    else:
+        cliente_id = cliente.crear(con, datos)
+        vehiculo_id = vehiculo.crear(
+            con, datos["matricula"], datos["marca_modelo"], cliente_id)
+
+    incidencia_id = incidencia.crear(con, {
+        "vehiculo_id":    vehiculo_id,
+        "fecha_entrada":  datos["fecha_entrada"],
+        "fecha_entrega":  datos["fecha_entrega"] or None,
+        # En la BD los kilómetros son un número entero; convertimos el texto
+        # (ya validado como dígitos) o dejamos None si viene vacío.
+        "kilometros":     int(datos["kilometros"]) if datos["kilometros"] else None,
+        "combustible":    datos["combustible"],
+        "estado":         "recibido",
+        "recoger_piezas": datos["recoger_piezas"],
+    })
+    reparacion.crear_varias(con, incidencia_id, datos["reparaciones"])
+    return incidencia_id
 
 
 def _leer_formulario(form):
     """
     Pasa los datos del formulario (un objeto de Flask) a un diccionario
-    normal, que es más cómodo de manejar y de enviar a la plantilla.
-    De paso, limpia los espacios y pone en mayúsculas el DNI y la matrícula.
+    normal, más cómodo de manejar y de enviar a la plantilla.
+    De paso limpia los espacios y pone en mayúsculas el DNI y la matrícula.
     """
     matricula = form.get("matricula", "").upper().replace("-", "").replace(" ", "")
     return {

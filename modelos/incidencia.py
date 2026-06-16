@@ -5,9 +5,10 @@ Una incidencia es una entrada del coche al taller. Enlaza con un
 vehículo (vehiculo_id) y va pasando por varios estados durante la
 reparación.
 
-Las fechas se guardan como AAAA-MM-DD (formato de SQLite). El formulario
-trabaja en dd/mm/aaaa, así que la conversión entre los dos formatos se
-hace en la ruta al guardar/mostrar, no aquí.
+Las fechas se guardan como AAAA-MM-DD, que es el formato de SQLite y también
+el que devuelve el <input type="date"> del formulario, así que se guardan tal
+cual. Para mostrarlas a la española (dd/mm/aaaa) está el filtro fecha_es de la
+plantilla; aquí no convertimos nada.
 """
 
 # Estados válidos, en el orden natural del trabajo. Es el mismo CHECK que
@@ -64,10 +65,7 @@ def obtener_completa(con, incidencia_id: int):
 
 
 def listar(con, limite: int = 50) -> list:
-    """
-    Últimas incidencias (las más recientes primero) con los datos que se
-    ven de un vistazo en el historial: matrícula, coche, cliente y estado.
-    """
+    """Últimas incidencias (las más recientes primero) para el historial."""
     return con.execute(
         """SELECT i.id            AS id,
                   i.fecha_entrada AS fecha_entrada,
@@ -86,11 +84,7 @@ def listar(con, limite: int = 50) -> list:
 
 
 def buscar(con, texto: str) -> list:
-    """
-    Busca incidencias por matrícula, nombre del cliente o fecha de
-    entrada: una sola caja de búsqueda que mira en las tres columnas.
-    (La fecha se busca tal como se guarda, en formato AAAA-MM-DD.)
-    """
+    """Busca incidencias por matrícula, nombre del cliente o fecha de entrada."""
     patron = f"%{texto}%"
     return con.execute(
         """SELECT i.id            AS id,
@@ -112,11 +106,6 @@ def buscar(con, texto: str) -> list:
 
 
 def cambiar_estado(con, incidencia_id: int, nuevo_estado: str) -> None:
-    """
-    Cambia el estado de una incidencia. Comprobamos antes que es uno de
-    los válidos para avisar con un error claro en vez de dejar que salte
-    el CHECK de la base de datos.
-    """
     if nuevo_estado not in ESTADOS:
         raise ValueError(f"Estado no válido: {nuevo_estado!r}")
     con.execute(
