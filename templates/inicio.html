@@ -14,9 +14,8 @@
   </div>
 
   {# -------------------- Tarjetas de acceso -------------------- #}
-  {# Solo la primera está activa. Las otras dos quedan marcadas como
-     "Próximamente" porque corresponden a la parte de base de datos
-     (clientes/vehículos y el historial), que desarrollamos después. #}
+  {# "Clientes y vehículos" sigue como "Próximamente": es la gestión (alta y
+     edición) de clientes y coches, que desarrollamos en un bloque posterior. #}
   <div class="row g-4 justify-content-center">
 
     <div class="col-12 col-md-4">
@@ -34,20 +33,24 @@
     </div>
 
     <div class="col-12 col-md-4">
-      <div class="card tarjeta-accion tarjeta-inactiva h-100">
-        <div class="card-body text-center">
-          <i class="bi bi-people fs-1"></i>
-          <h2 class="h5 mt-3">Clientes y vehículos</h2>
-          <span class="badge bg-secondary">Próximamente</span>
+      <a href="{{ url_for('incidencias.historial') }}" class="text-decoration-none">
+        <div class="card tarjeta-accion h-100">
+          <div class="card-body text-center">
+            <i class="bi bi-clock-history fs-1 text-acento"></i>
+            <h2 class="h5 mt-3">Historial de fichas</h2>
+            <p class="text-muted small mb-0">
+              Consulta las fichas guardadas y vuelve a imprimir su resguardo.
+            </p>
+          </div>
         </div>
-      </div>
+      </a>
     </div>
 
     <div class="col-12 col-md-4">
       <div class="card tarjeta-accion tarjeta-inactiva h-100">
         <div class="card-body text-center">
-          <i class="bi bi-clock-history fs-1"></i>
-          <h2 class="h5 mt-3">Historial de fichas</h2>
+          <i class="bi bi-people fs-1"></i>
+          <h2 class="h5 mt-3">Clientes y vehículos</h2>
           <span class="badge bg-secondary">Próximamente</span>
         </div>
       </div>

@@ -31,8 +31,12 @@
     </header>
 
     {# -------------------- Título -------------------- #}
+    {# El número de resguardo es el id de la incidencia en la base de datos,
+       a 5 cifras (p. ej. 00007). Si por lo que sea no hubiera id, dejamos el
+       hueco en blanco para rellenarlo a mano. #}
     <div class="hoja-titulo">
-      <h1>RESGUARDO DE DEPÓSITO N.º ____________</h1>
+      <h1>RESGUARDO DE DEPÓSITO
+        N.º {% if datos.id %}{{ "%05d"|format(datos.id) }}{% else %}____________{% endif %}</h1>
       <p>PARA SU REPARACIÓN SIN PRESUPUESTO PREVIO</p>
     </div>
 
@@ -80,7 +84,6 @@
         <tr>
           <th>Combustible</th>
           <td colspan="3">
-            {# Mostramos los cinco niveles y resaltamos el seleccionado. #}
             {% for nivel in ["0", "1/4", "1/2", "3/4", "4/4"] %}
               <span class="nivel {% if datos.combustible == nivel %}nivel-activo{% endif %}">
                 {{ nivel }}
@@ -114,8 +117,6 @@
             <li>{{ linea }}</li>
           {% endfor %}
         {% else %}
-          {# Si no se escribió ningún trabajo, dejamos líneas en blanco para
-             rellenar a mano. #}
           {% for _ in range(4) %}<li>&nbsp;</li>{% endfor %}
         {% endif %}
       </ol>
