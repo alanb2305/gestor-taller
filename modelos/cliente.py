@@ -76,19 +76,6 @@ def obtener_por_id(con, cliente_id: int):
     ).fetchone()
 
 
-def buscar_por_nombre(con, texto: str) -> list:
-    """
-    Clientes cuyo nombre contenga 'texto'. Lo usa el buscador del
-    historial. SQLite no distingue mayúsculas en LIKE para letras
-    normales (sí en las acentuadas; eso queda como mejora futura).
-    """
-    patron = f"%{texto}%"
-    return con.execute(
-        "SELECT * FROM clientes WHERE nombre LIKE ? ORDER BY nombre",
-        (patron,),
-    ).fetchall()
-
-
 def listar_todos(con) -> list:
     """Todos los clientes, ordenados por nombre. Lo usa la exportación a CSV."""
     return con.execute("SELECT * FROM clientes ORDER BY nombre").fetchall()

@@ -24,8 +24,10 @@ bp_clientes = Blueprint("clientes", __name__, url_prefix="/clientes")
 def lista():
     """Listado de clientes con cuántos coches tiene cada uno."""
     con = obtener_conexion()
-    clientes = cliente.listar_con_resumen(con)
-    con.close()
+    try:
+        clientes = cliente.listar_con_resumen(con)
+    finally:
+        con.close()
     return render_template("clientes_lista.html", clientes=clientes)
 
 

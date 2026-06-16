@@ -19,7 +19,7 @@ from flask import (Blueprint, render_template, request,
 
 from modelos.conexion import obtener_conexion
 from modelos import cliente, vehiculo, incidencia, reparacion
-from servicios.validaciones import validar_incidencia
+from servicios.validaciones import validar_incidencia, normalizar_matricula
 from servicios.pdf import generar_resguardo_pdf
 
 # url_prefix: todas las rutas de este blueprint empiezan por /incidencias.
@@ -50,7 +50,9 @@ def _valores_por_defecto():
         "kilometros":     "",
         "combustible":    "1/2",
         "recoger_piezas": "No",
-        "reparaciones":   ["", "", "", "", ""],
+        # Una sola línea al empezar; el usuario añade más con el botón "+"
+        # (lo gestiona static/js/trabajos.js).
+        "reparaciones":   [""],
     }
 
 
@@ -109,11 +111,13 @@ def buscar_matricula(matricula):
     """
     # Normalizamos igual que al guardar (mayúsculas, sin guiones ni espacios)
     # para que "1234-bcd" y "1234 BCD" encuentren la misma matrícula.
-    matricula = matricula.upper().replace("-", "").replace(" ", "")
+    matricula = normalizar_matricula(matricula)
 
     con = obtener_conexion()
-    fila = vehiculo.datos_para_autorrelleno(con, matricula)
-    con.close()
+    try:
+        fila = vehiculo.datos_para_autorrelleno(con, matricula)
+    finally:
+        con.close()
 
     if fila is None:
         return jsonify({"encontrado": False})
@@ -135,8 +139,10 @@ def buscar_matricula(matricula):
 def resguardo(incidencia_id):
     """Muestra el resguardo de una ficha ya guardada, listo para imprimir."""
     con = obtener_conexion()
-    datos = _datos_resguardo(con, incidencia_id)
-    con.close()
+    try:
+        datos = _datos_resguardo(con, incidencia_id)
+    finally:
+        con.close()
 
     if datos is None:
         abort(404)   # la ficha no existe (id inventado en la URL)
@@ -156,8 +162,10 @@ def descargar_pdf(incidencia_id):
     bajarse el archivo directamente.
     """
     con = obtener_conexion()
-    datos = _datos_resguardo(con, incidencia_id)
-    con.close()
+    try:
+        datos = _datos_resguardo(con, incidencia_id)
+    finally:
+        con.close()
 
     if datos is None:
         abort(404)
@@ -176,8 +184,10 @@ def historial():
     """
     busqueda = request.args.get("q", "").strip()
     con = obtener_conexion()
-    fichas = incidencia.buscar(con, busqueda) if busqueda else incidencia.listar(con)
-    con.close()
+    try:
+        fichas = incidencia.buscar(con, busqueda) if busqueda else incidencia.listar(con)
+    finally:
+        con.close()
 
     # Para cada estado, cuál es el siguiente. Lo calculamos una vez aquí y la
     # plantilla lo usa para poner en cada fila el botón "pasar a <siguiente>".
@@ -201,11 +211,11 @@ def avanzar_estado(incidencia_id):
     """
     con = obtener_conexion()
     try:
-        fila = incidencia.obtener_completa(con, incidencia_id)
-        if fila is None:
+        estado = incidencia.obtener_estado(con, incidencia_id)
+        if estado is None:
             abort(404)   # la ficha no existe (id inventado en la URL)
 
-        siguiente = incidencia.siguiente_estado(fila["estado"])
+        siguiente = incidencia.siguiente_estado(estado)
         if siguiente is not None:
             incidencia.cambiar_estado(con, incidencia_id, siguiente)
             con.commit()
@@ -282,7 +292,6 @@ def _leer_formulario(form):
     normal, más cómodo de manejar y de enviar a la plantilla.
     De paso limpia los espacios y pone en mayúsculas el DNI y la matrícula.
     """
-    matricula = form.get("matricula", "").upper().replace("-", "").replace(" ", "")
     return {
         "fecha_entrada":  form.get("fecha_entrada", "").strip(),
         "fecha_entrega":  form.get("fecha_entrega", "").strip(),
@@ -294,7 +303,9 @@ def _leer_formulario(form):
         "cp":             form.get("cp", "").strip(),
         "poblacion":      form.get("poblacion", "").strip(),
         "marca_modelo":   form.get("marca_modelo", "").strip(),
-        "matricula":      matricula.strip(),
+        # normalizar_matricula deja la matrícula en mayúsculas y sin guiones
+        # ni espacios (la misma función que usan el autorrelleno y el CSV).
+        "matricula":      normalizar_matricula(form.get("matricula", "")),
         "kilometros":     form.get("kilometros", "").strip(),
         "combustible":    form.get("combustible", "1/2"),
         "recoger_piezas": form.get("recoger_piezas", "No"),

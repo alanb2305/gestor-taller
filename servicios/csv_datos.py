@@ -99,10 +99,6 @@ def _campo(fila, clave):
     return (fila.get(clave) or "").strip()
 
 
-def _normalizar_matricula(texto):
-    return texto.upper().replace("-", "").replace(" ", "")
-
-
 def importar_clientes(con, archivo):
     """
     Importa clientes. Para cada fila:
@@ -149,7 +145,7 @@ def importar_vehiculos(con, archivo):
 
     resumen = {"anadidos": 0, "actualizados": 0, "descartados": 0, "errores": []}
     for n, fila in enumerate(filas, start=2):
-        matricula   = _normalizar_matricula(_campo(fila, "matricula"))
+        matricula   = validaciones.normalizar_matricula(_campo(fila, "matricula"))
         marca       = _campo(fila, "marca_modelo")
         cif_cliente = _campo(fila, "cif_cliente").upper()
 
@@ -202,7 +198,7 @@ def importar_historial(con, archivo):
             "cp":             _campo(fila, "cp"),
             "poblacion":      _campo(fila, "poblacion"),
             "marca_modelo":   _campo(fila, "marca_modelo"),
-            "matricula":      _normalizar_matricula(_campo(fila, "matricula")),
+            "matricula":      validaciones.normalizar_matricula(_campo(fila, "matricula")),
             "kilometros":     _campo(fila, "kilometros"),
             "combustible":    _campo(fila, "combustible") or "1/2",
             "recoger_piezas": _campo(fila, "recoger_piezas") or "No",

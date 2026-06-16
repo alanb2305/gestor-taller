@@ -16,7 +16,6 @@ parten de los mismos datos, solo cambia el formato.
 """
 
 import io
-from datetime import date
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -27,20 +26,13 @@ from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer,
                                 Table, TableStyle, HRFlowable)
 
 from config import TALLER
+from servicios.formato import fecha_es
 
 # Colores (los mismos tonos que la web, para que el PDF case con la pantalla).
 _NARANJA    = colors.HexColor("#e07b00")
 _GRIS       = colors.HexColor("#555555")
 _GRIS_BORDE = colors.HexColor("#bbbbbb")
 _GRIS_FONDO = colors.HexColor("#f0f0f0")
-
-
-def _fecha_es(iso):
-    """Pasa una fecha AAAA-MM-DD a dd/mm/aaaa (como el filtro de la plantilla)."""
-    try:
-        return date.fromisoformat(iso).strftime("%d/%m/%Y")
-    except (ValueError, TypeError):
-        return iso or ""
 
 
 def _texto(valor):
@@ -117,8 +109,8 @@ def generar_resguardo_pdf(datos):
     fechas = Table([
         [Paragraph("Fecha de entrada", e["etiqueta"]),
          Paragraph("Entrega prevista", e["etiqueta"])],
-        [Paragraph(_fecha_es(datos.get("fecha_entrada")), e["normal"]),
-         Paragraph(_fecha_es(datos.get("fecha_entrega")), e["normal"])],
+        [Paragraph(fecha_es(datos.get("fecha_entrada")), e["normal"]),
+         Paragraph(fecha_es(datos.get("fecha_entrega")), e["normal"])],
     ], colWidths=[87 * mm, 87 * mm])
     fechas.setStyle(TableStyle([
         ("BOX", (0, 0), (-1, -1), 0.5, _GRIS_BORDE),

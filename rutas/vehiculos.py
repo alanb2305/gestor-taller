@@ -15,7 +15,7 @@ from flask import (Blueprint, render_template, request,
 
 from modelos.conexion import obtener_conexion
 from modelos import cliente, vehiculo, incidencia
-from servicios.validaciones import validar_vehiculo
+from servicios.validaciones import validar_vehiculo, normalizar_matricula
 
 bp_vehiculos = Blueprint("vehiculos", __name__, url_prefix="/vehiculos")
 
@@ -24,8 +24,10 @@ bp_vehiculos = Blueprint("vehiculos", __name__, url_prefix="/vehiculos")
 def lista():
     """Listado de vehículos con su dueño y cuántas fichas tienen."""
     con = obtener_conexion()
-    vehiculos = vehiculo.listar_con_resumen(con)
-    con.close()
+    try:
+        vehiculos = vehiculo.listar_con_resumen(con)
+    finally:
+        con.close()
     return render_template("vehiculos_lista.html", vehiculos=vehiculos)
 
 
@@ -122,7 +124,7 @@ def borrar(vehiculo_id):
 def _leer_formulario(form):
     """Pasa el formulario a un diccionario, normalizando la matrícula."""
     return {
-        "matricula":    form.get("matricula", "").upper().replace("-", "").replace(" ", "").strip(),
+        "matricula":    normalizar_matricula(form.get("matricula", "")),
         "marca_modelo": form.get("marca_modelo", "").strip(),
         "cliente_id":   form.get("cliente_id", "").strip(),
     }

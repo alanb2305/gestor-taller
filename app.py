@@ -4,12 +4,11 @@ Crea la app de Flask, deja preparada la base de datos y registra las rutas,
 que tenemos repartidas en la carpeta 'rutas' para no juntarlo todo aquí.
 """
 
-from datetime import date
-
 from flask import Flask
 
 from config import NOMBRE_APP, CLAVE_SECRETA, TALLER
 from modelos.conexion import inicializar_bd
+from servicios.formato import fecha_es
 from rutas.principal import bp_principal
 from rutas.incidencias import bp_incidencias
 from rutas.datos import bp_datos
@@ -40,17 +39,14 @@ def inyectar_datos_comunes():
 
 
 # ---------------------------------------------------------------------------
-# Filtro de plantilla para mostrar las fechas.
+# Filtro de plantilla para mostrar las fechas a la española (dd/mm/aaaa).
 # En la base de datos y en los <input type="date"> las fechas van en formato
-# ISO (AAAA-MM-DD), pero en el resguardo queremos verlas a la española
-# (dd/mm/aaaa). Con este filtro, en el HTML basta escribir:  {{ fecha | fecha_es }}
+# ISO (AAAA-MM-DD); en el resguardo las queremos en dd/mm/aaaa. La conversión
+# vive en servicios/formato.py (la usa también el PDF, así no se repite); aquí
+# solo la registramos como filtro para poder escribir en el HTML:
+#     {{ fecha | fecha_es }}
 # ---------------------------------------------------------------------------
-@app.template_filter("fecha_es")
-def fecha_es(iso):
-    try:
-        return date.fromisoformat(iso).strftime("%d/%m/%Y")
-    except (ValueError, TypeError):
-        return iso or ""
+app.add_template_filter(fecha_es, "fecha_es")
 
 
 # Registramos los blueprints: cada uno agrupa las rutas de una parte de la

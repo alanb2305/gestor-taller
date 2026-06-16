@@ -36,10 +36,12 @@ def estadisticas():
     "datos" (los números), que es justo lo que Chart.js espera recibir.
     """
     con = obtener_conexion()
-    por_estado = incidencia.contar_por_estado(con)
-    por_mes    = incidencia.contar_por_mes(con)
-    top        = incidencia.clientes_con_mas_visitas(con, limite=5)
-    con.close()
+    try:
+        por_estado = incidencia.contar_por_estado(con)
+        por_mes    = incidencia.contar_por_mes(con)
+        top        = incidencia.clientes_con_mas_visitas(con, limite=5)
+    finally:
+        con.close()
 
     # Fichas por estado: respetamos el orden natural del ciclo y ponemos 0 en
     # los estados que aún no tienen ninguna ficha, para que la gráfica salga
