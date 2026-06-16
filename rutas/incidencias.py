@@ -2,7 +2,9 @@
 Rutas de las incidencias (las órdenes de trabajo / resguardos de depósito).
 
 Aquí está el alta de una ficha (el formulario), el guardado en la base de
-datos, la vista del resguardo ya relleno y el historial de fichas.
+datos, la vista del resguardo ya relleno, el historial de fichas y el
+pequeño endpoint que usa el autorrelleno para traer los datos de una
+matrícula ya conocida.
 
 Al guardar seguimos el orden "comprobar primero, escribir después": primero
 validamos en el servidor y, solo si todo está bien, abrimos la conexión y
@@ -13,7 +15,7 @@ el cliente, el vehículo, la incidencia y sus reparaciones, o no se graba nada.
 from datetime import date, timedelta
 
 from flask import (Blueprint, render_template, request,
-                   redirect, url_for, flash, abort)
+                   redirect, url_for, flash, abort, jsonify)
 
 from modelos.conexion import obtener_conexion
 from modelos import cliente, vehiculo, incidencia, reparacion
@@ -91,6 +93,43 @@ def nueva():
     return redirect(url_for("incidencias.resguardo", incidencia_id=incidencia_id))
 
 
+@bp_incidencias.route("/matricula/<matricula>")
+def buscar_matricula(matricula):
+    """
+    Endpoint del autorrelleno (lo llama static/js/autorrelleno.js).
+
+    Devuelve en JSON los datos del cliente y del vehículo de una matrícula
+    que ya está registrada, para que el formulario los rellene solo. Si la
+    matrícula es nueva, responde {"encontrado": false} y el formulario se
+    deja como está.
+
+    No devolvemos los ids internos de la base de datos: al navegador solo le
+    hacen falta los campos que tiene que rellenar.
+    """
+    # Normalizamos igual que al guardar (mayúsculas, sin guiones ni espacios)
+    # para que "1234-bcd" y "1234 BCD" encuentren la misma matrícula.
+    matricula = matricula.upper().replace("-", "").replace(" ", "")
+
+    con = obtener_conexion()
+    fila = vehiculo.datos_para_autorrelleno(con, matricula)
+    con.close()
+
+    if fila is None:
+        return jsonify({"encontrado": False})
+
+    return jsonify({
+        "encontrado":   True,
+        "nombre":       fila["nombre"],
+        "cif":          fila["cif"],
+        "telefono":     fila["telefono"],
+        "domicilio":    fila["domicilio"],
+        "numero":       fila["numero"],
+        "cp":           fila["cp"],
+        "poblacion":    fila["poblacion"],
+        "marca_modelo": fila["marca_modelo"],
+    })
+
+
 @bp_incidencias.route("/<int:incidencia_id>")
 def resguardo(incidencia_id):
     """Muestra el resguardo de una ficha ya guardada, listo para imprimir."""
@@ -126,17 +165,21 @@ def _guardar_incidencia(con, datos):
     """
     Graba una ficha completa y devuelve el id de la incidencia creada.
 
-    La matrícula identifica al coche (es UNIQUE en la tabla): si ya existe,
-    reaprovechamos ese vehículo y, con él, su cliente; si no, creamos cliente
-    nuevo y vehículo nuevo. Después va la incidencia y sus reparaciones.
-
-    De momento, si la matrícula ya existe NO actualizamos los datos del
-    cliente con lo que se haya tecleado: nos fiamos de lo que ya hay guardado.
-    Actualizarlos queda como mejora, de la mano del autorrelleno.
+    La matrícula identifica al coche (es UNIQUE en la tabla):
+      - Si ya existe, reutilizamos ese vehículo y su cliente, y de paso
+        ponemos al día sus datos con lo que se haya escrito en el formulario.
+        Así, con el autorrelleno, se puede corregir un teléfono o un
+        domicilio antiguo y queda guardado lo último.
+      - Si no existe, creamos cliente nuevo y vehículo nuevo.
+    Después va la incidencia y sus reparaciones.
     """
     veh = vehiculo.obtener_por_matricula(con, datos["matricula"])
     if veh:
         vehiculo_id = veh["id"]
+        # La matrícula ya estaba: actualizamos los datos del cliente y la
+        # marca/modelo por si se han corregido al rellenar la ficha.
+        cliente.actualizar(con, veh["cliente_id"], datos)
+        vehiculo.actualizar_marca_modelo(con, vehiculo_id, datos["marca_modelo"])
     else:
         cliente_id = cliente.crear(con, datos)
         vehiculo_id = vehiculo.crear(

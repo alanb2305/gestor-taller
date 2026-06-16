@@ -16,6 +16,21 @@ def crear(con, matricula: str, marca_modelo: str, cliente_id: int) -> int:
     return cursor.lastrowid
 
 
+def actualizar_marca_modelo(con, vehiculo_id: int, marca_modelo: str) -> None:
+    """
+    Corrige la marca y el modelo de un vehículo ya registrado.
+
+    La matrícula NO se cambia: es lo que identifica al coche. Pero la marca
+    o el modelo sí pueden haberse escrito mal la primera vez, así que cuando
+    se reutiliza una matrícula con el autorrelleno dejamos guardado lo que
+    aparezca escrito al guardar.
+    """
+    con.execute(
+        "UPDATE vehiculos SET marca_modelo = ? WHERE id = ?",
+        (marca_modelo, vehiculo_id),
+    )
+
+
 def obtener_por_matricula(con, matricula: str):
     """Devuelve el vehículo con esa matrícula, o None si no existe."""
     return con.execute(

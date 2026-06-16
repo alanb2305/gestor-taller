@@ -38,6 +38,59 @@
       </div>
     </div>
 
+    {# ==================== VEHÍCULO ==================== #}
+    {# Ponemos el vehículo ANTES que el cliente porque la matrícula es lo
+       primero que se mira al recibir el coche, y es la que dispara el
+       autorrelleno de los datos del cliente. #}
+    <div class="card mb-4">
+      <div class="card-header">Datos del vehículo</div>
+      <div class="card-body">
+        <div class="row g-3">
+
+          <div class="col-12 col-md-3">
+            <label for="matricula" class="form-label">Matrícula *</label>
+            <input type="text" id="matricula" name="matricula"
+                   value="{{ datos.matricula }}"
+                   class="form-control text-uppercase {% if errores.matricula %}is-invalid{% endif %}">
+            <div class="invalid-feedback">{{ errores.matricula }}</div>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label for="marca_modelo" class="form-label">Marca y modelo *</label>
+            <input type="text" id="marca_modelo" name="marca_modelo"
+                   value="{{ datos.marca_modelo }}"
+                   class="form-control {% if errores.marca_modelo %}is-invalid{% endif %}">
+            <div class="invalid-feedback">{{ errores.marca_modelo }}</div>
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label for="kilometros" class="form-label">Kilómetros</label>
+            <input type="text" id="kilometros" name="kilometros" inputmode="numeric"
+                   value="{{ datos.kilometros }}"
+                   class="form-control {% if errores.kilometros %}is-invalid{% endif %}">
+            <div class="invalid-feedback">{{ errores.kilometros }}</div>
+          </div>
+
+          {# Nivel de combustible: botones tipo radio (btn-check). Solo se puede
+             elegir uno y se envía con el name "combustible". #}
+          <div class="col-12">
+            <label class="form-label d-block">Nivel de combustible</label>
+            <div class="btn-group" role="group" aria-label="Nivel de combustible">
+              {% for nivel in ["0", "1/4", "1/2", "3/4", "4/4"] %}
+                <input type="radio" class="btn-check" name="combustible"
+                       id="comb_{{ loop.index }}" value="{{ nivel }}"
+                       {% if datos.combustible == nivel %}checked{% endif %}>
+                <label class="btn btn-outline-secondary" for="comb_{{ loop.index }}">
+                  {{ nivel }}
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     {# ==================== CLIENTE ==================== #}
     <div class="card mb-4">
       <div class="card-header">Datos del cliente</div>
@@ -98,56 +151,6 @@
       </div>
     </div>
 
-    {# ==================== VEHÍCULO ==================== #}
-    <div class="card mb-4">
-      <div class="card-header">Datos del vehículo</div>
-      <div class="card-body">
-        <div class="row g-3">
-
-          <div class="col-12 col-md-6">
-            <label for="marca_modelo" class="form-label">Marca y modelo *</label>
-            <input type="text" id="marca_modelo" name="marca_modelo"
-                   value="{{ datos.marca_modelo }}"
-                   class="form-control {% if errores.marca_modelo %}is-invalid{% endif %}">
-            <div class="invalid-feedback">{{ errores.marca_modelo }}</div>
-          </div>
-
-          <div class="col-12 col-md-3">
-            <label for="matricula" class="form-label">Matrícula *</label>
-            <input type="text" id="matricula" name="matricula"
-                   value="{{ datos.matricula }}"
-                   class="form-control text-uppercase {% if errores.matricula %}is-invalid{% endif %}">
-            <div class="invalid-feedback">{{ errores.matricula }}</div>
-          </div>
-
-          <div class="col-12 col-md-3">
-            <label for="kilometros" class="form-label">Kilómetros</label>
-            <input type="text" id="kilometros" name="kilometros" inputmode="numeric"
-                   value="{{ datos.kilometros }}"
-                   class="form-control {% if errores.kilometros %}is-invalid{% endif %}">
-            <div class="invalid-feedback">{{ errores.kilometros }}</div>
-          </div>
-
-          {# Nivel de combustible: botones tipo radio (btn-check). Solo se puede
-             elegir uno y se envía con el name "combustible". #}
-          <div class="col-12">
-            <label class="form-label d-block">Nivel de combustible</label>
-            <div class="btn-group" role="group" aria-label="Nivel de combustible">
-              {% for nivel in ["0", "1/4", "1/2", "3/4", "4/4"] %}
-                <input type="radio" class="btn-check" name="combustible"
-                       id="comb_{{ loop.index }}" value="{{ nivel }}"
-                       {% if datos.combustible == nivel %}checked{% endif %}>
-                <label class="btn btn-outline-secondary" for="comb_{{ loop.index }}">
-                  {{ nivel }}
-                </label>
-              {% endfor %}
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
     {# ==================== REPARACIONES ==================== #}
     <div class="card mb-4">
       <div class="card-header">Trabajos a realizar</div>
@@ -200,4 +203,7 @@
   {# Validación en el navegador: solo es comodidad para el usuario; la de
      verdad se hace en el servidor (servicios/validaciones.py). #}
   <script src="{{ url_for('static', filename='js/validaciones.js') }}"></script>
+  {# Autorrelleno: al teclear una matrícula ya registrada, trae del servidor
+     los datos del cliente y del vehículo y los pone en el formulario. #}
+  <script src="{{ url_for('static', filename='js/autorrelleno.js') }}"></script>
 {% endblock %}
