@@ -58,4 +58,60 @@
 
   </div>
 
+  {# -------------------- Resumen (gráficas) -------------------- #}
+  <h2 class="h5 mt-5 mb-3">Resumen del taller</h2>
+
+  {# Si todavía no hay fichas, graficos.js esconde las gráficas y enseña esto. #}
+  <div id="sin-datos" class="alert alert-light border text-center" style="display:none">
+    Aún no hay datos para mostrar gráficas.
+    <a href="{{ url_for('incidencias.nueva') }}">Crea la primera ficha</a>.
+  </div>
+
+  {# Cada gráfica va dentro de una tarjeta. El <canvas> es donde Chart.js
+     dibuja; lo metemos en un div con alto fijo para que la gráfica sea
+     responsive pero no se estire sin control. #}
+  <div id="graficas" class="row g-4">
+
+    <div class="col-12 col-lg-5">
+      <div class="card h-100">
+        <div class="card-header">Fichas por estado</div>
+        <div class="card-body">
+          <div style="height: 260px">
+            <canvas id="grafica-estado"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-7">
+      <div class="card h-100">
+        <div class="card-header">Fichas por mes</div>
+        <div class="card-body">
+          <div style="height: 260px">
+            <canvas id="grafica-mes"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">Clientes que más vuelven</div>
+        <div class="card-body">
+          <div style="height: 260px">
+            <canvas id="grafica-clientes"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+{% endblock %}
+
+{% block scripts %}
+  {# Chart.js desde CDN (no se instala con pip; es una librería de JavaScript). #}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  {# Nuestro código: pide los datos a /estadisticas y dibuja las tres gráficas. #}
+  <script src="{{ url_for('static', filename='js/graficos.js') }}"></script>
 {% endblock %}
