@@ -4,11 +4,20 @@
 
 {% block contenido %}
 
-  {# Estos botones NO salen al imprimir (clase no-imprimir, oculta por CSS). #}
+  {# Estos botones NO salen al imprimir (clase no-imprimir, oculta por CSS).
+     Hay dos formas de llevarse el documento:
+       - "Imprimir": abre el diálogo del navegador (permite imprimir en papel
+         o "guardar como PDF").
+       - "Descargar PDF": baja directamente el archivo .pdf generado en el
+         servidor (ruta incidencias.descargar_pdf). #}
   <div class="no-imprimir mb-3 d-flex gap-2">
     <button type="button" class="btn btn-principal" onclick="window.print()">
       <i class="bi bi-printer"></i> Imprimir
     </button>
+    <a href="{{ url_for('incidencias.descargar_pdf', incidencia_id=datos.id) }}"
+       class="btn btn-outline-secondary">
+      <i class="bi bi-file-earmark-arrow-down"></i> Descargar PDF
+    </a>
     <a href="{{ url_for('incidencias.nueva') }}" class="btn btn-outline-secondary">
       <i class="bi bi-arrow-left"></i> Volver
     </a>
@@ -37,7 +46,6 @@
     <div class="hoja-titulo">
       <h1>RESGUARDO DE DEPÓSITO
         N.º {% if datos.id %}{{ "%05d"|format(datos.id) }}{% else %}____________{% endif %}</h1>
-      <p>PARA SU REPARACIÓN SIN PRESUPUESTO PREVIO</p>
     </div>
 
     {# -------------------- Fechas -------------------- #}
@@ -94,20 +102,6 @@
       </table>
     </section>
 
-    {# -------------------- Autorización -------------------- #}
-    <section class="hoja-bloque">
-      <p class="texto-legal">
-        El cliente autoriza expresamente al taller a realizar las reparaciones
-        que se detallan a continuación <strong>sin presupuesto previo</strong>,
-        conforme al artículo 14.5 del Real Decreto 1457/1986, de 10 de enero,
-        por el que se regula la actividad industrial y la prestación de
-        servicios en los talleres de reparación de vehículos. Asimismo, autoriza
-        las pruebas en carretera necesarias para el diagnóstico y la
-        verificación de la reparación, y declara que el vehículo tiene en vigor
-        el seguro obligatorio.
-      </p>
-    </section>
-
     {# -------------------- Trabajos -------------------- #}
     <section class="hoja-bloque">
       <h2>Trabajos a realizar</h2>
@@ -146,54 +140,11 @@
       </div>
     </section>
 
-    {# -------------------- Información al cliente -------------------- #}
-    <section class="hoja-bloque info-cliente">
-      <h2>Información al cliente</h2>
-
-      <h3>Derecho a presupuesto previo</h3>
-      <p class="texto-legal">
-        El cliente tiene derecho a la elaboración de un presupuesto previo y por
-        escrito de las reparaciones. La firma de este resguardo en el apartado
-        de autorización supone la renuncia a dicho presupuesto.
-      </p>
-
-      <h3>Garantía</h3>
-      <p class="texto-legal">
-        La reparación efectuada queda garantizada durante 3 meses o 2.000
-        kilómetros (lo que antes ocurra). En los vehículos industriales el plazo
-        es de 15 días (artículo 16 del Real Decreto 1457/1986). Las piezas que
-        cuenten con garantía propia del fabricante mantendrán el plazo que esta
-        establezca cuando sea superior.
-      </p>
-
-      <h3>Normativa legal</h3>
-      <p class="texto-legal">
-        Este establecimiento dispone de hojas de reclamaciones a disposición del
-        cliente. Resulta de aplicación el Real Decreto 1457/1986 y la demás
-        normativa vigente de defensa de los consumidores y usuarios.
-      </p>
-
-      {# OJO: el formulario original citaba la LOPD 15/1999, que está DEROGADA.
-         La hemos sustituido por la normativa vigente (RGPD + LOPDGDD). Si se
-         prefiere el texto antiguo, basta con cambiar este párrafo. Conviene que
-         lo revise la gestoría del taller. #}
-      <h3>Tratamiento de datos</h3>
-      <p class="texto-legal">
-        De conformidad con el Reglamento (UE) 2016/679 (RGPD) y la Ley Orgánica
-        3/2018, de 5 de diciembre, de Protección de Datos Personales y garantía
-        de los derechos digitales, los datos personales recogidos en este
-        documento serán tratados por {{ taller.nombre }}, con domicilio en
-        {{ taller.direccion }}, como responsable del tratamiento, con la
-        finalidad de gestionar la reparación del vehículo y atender las
-        obligaciones derivadas de dicha relación. El cliente podrá ejercer sus
-        derechos de acceso, rectificación, supresión, limitación, portabilidad y
-        oposición dirigiéndose por escrito a la dirección indicada. Los datos se
-        conservarán durante el tiempo necesario para cumplir las obligaciones
-        legales aplicables.
-      </p>
-    </section>
-
     {# -------------------- Pie del documento -------------------- #}
+    {# Nota: los textos legales (autorización sin presupuesto, garantía,
+       protección de datos...) se han retirado en esta versión académica.
+       Cuando la app se use en el taller habrá que añadirlos revisados; con
+       Git se pueden recuperar del historial del proyecto. #}
     <footer class="hoja-pie small">
       {{ taller.nombre }} — {{ taller.direccion }}<br>
       Tel. {{ taller.telefono }}{% if taller.fax %} · Fax {{ taller.fax }}{% endif %}{% if taller.email %} · {{ taller.email }}{% endif %}

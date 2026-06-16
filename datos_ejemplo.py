@@ -1,12 +1,15 @@
 """
 Datos de ejemplo para la demo.
 
-Rellena la base de datos con tres clientes, sus coches y varias
-incidencias, para poder enseñar el autorrelleno, el historial y, más
-adelante, los gráficos, sin tener que teclear todo a mano.
+Rellena la base de datos con tres clientes, sus coches y varias incidencias,
+para poder enseñar el autorrelleno, el historial, los estados y los gráficos
+sin tener que teclear todo a mano.
 
-Solo siembra si la base está vacía, así no se duplican los datos al
-ejecutarlo dos veces.
+Los datos son INVENTADOS y genéricos (proyecto académico): nombres de ejemplo,
+DNIs de prueba con letra de control válida y poblaciones cualesquiera.
+
+Solo siembra si la base está vacía, así no se duplican los datos al ejecutarlo
+dos veces.
 
     python datos_ejemplo.py
 """
@@ -19,9 +22,9 @@ from modelos import cliente, vehiculo, incidencia, reparacion
 EJEMPLOS = [
     {
         "cliente": {
-            "nombre": "María Pérez Lázaro", "cif": "25181746K",
-            "telefono": "678123456", "domicilio": "C/ Mayor", "numero": "12",
-            "cp": "50001", "poblacion": "Zaragoza",
+            "nombre": "Ana López García", "cif": "12345678Z",
+            "telefono": "600000001", "domicilio": "Calle de Ejemplo", "numero": "1",
+            "cp": "28001", "poblacion": "Madrid",
         },
         "vehiculo": {"matricula": "1234BCD", "marca_modelo": "SEAT León 1.6 TDI"},
         "incidencias": [
@@ -44,9 +47,9 @@ EJEMPLOS = [
     },
     {
         "cliente": {
-            "nombre": "José Antonio Marín Gil", "cif": "17845239L",
-            "telefono": "611998877", "domicilio": "Av. de Madrid", "numero": "204",
-            "cp": "50010", "poblacion": "Zaragoza",
+            "nombre": "Carlos Martín Ruiz", "cif": "87654321X",
+            "telefono": "600000002", "domicilio": "Avenida de Muestra", "numero": "20",
+            "cp": "41001", "poblacion": "Sevilla",
         },
         "vehiculo": {"matricula": "5678FGH", "marca_modelo": "Renault Clio 1.2"},
         "incidencias": [
@@ -64,9 +67,9 @@ EJEMPLOS = [
     },
     {
         "cliente": {
-            "nombre": "Lucía Sánchez Romero", "cif": "73920184M",
-            "telefono": "699445566", "domicilio": "C/ Delicias", "numero": "8B",
-            "cp": "50017", "poblacion": "Zaragoza",
+            "nombre": "Lucía Fernández Gil", "cif": "11223344B",
+            "telefono": "600000003", "domicilio": "Calle de Prueba", "numero": "8",
+            "cp": "46001", "poblacion": "Valencia",
         },
         "vehiculo": {"matricula": "9012JKL", "marca_modelo": "Ford Focus 1.5 TDCi"},
         "incidencias": [

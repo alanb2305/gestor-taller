@@ -15,11 +15,12 @@ el cliente, el vehículo, la incidencia y sus reparaciones, o no se graba nada.
 from datetime import date, timedelta
 
 from flask import (Blueprint, render_template, request,
-                   redirect, url_for, flash, abort, jsonify)
+                   redirect, url_for, flash, abort, jsonify, send_file)
 
 from modelos.conexion import obtener_conexion
 from modelos import cliente, vehiculo, incidencia, reparacion
 from servicios.validaciones import validar_incidencia
+from servicios.pdf import generar_resguardo_pdf
 
 # url_prefix: todas las rutas de este blueprint empiezan por /incidencias.
 bp_incidencias = Blueprint("incidencias", __name__, url_prefix="/incidencias")
@@ -134,18 +135,37 @@ def buscar_matricula(matricula):
 def resguardo(incidencia_id):
     """Muestra el resguardo de una ficha ya guardada, listo para imprimir."""
     con = obtener_conexion()
-    fila = incidencia.obtener_completa(con, incidencia_id)
-    lineas = reparacion.listar_por_incidencia(con, incidencia_id)
+    datos = _datos_resguardo(con, incidencia_id)
     con.close()
 
-    if fila is None:
+    if datos is None:
         abort(404)   # la ficha no existe (id inventado en la URL)
-
-    # La plantilla trabaja con un diccionario; convertimos la fila de la base
-    # de datos y le añadimos las reparaciones como una lista de textos.
-    datos = dict(fila)
-    datos["reparaciones"] = [linea["descripcion"] for linea in lineas]
     return render_template("resguardo.html", datos=datos)
+
+
+@bp_incidencias.route("/<int:incidencia_id>/pdf")
+def descargar_pdf(incidencia_id):
+    """
+    Genera el resguardo en PDF y lo descarga como archivo.
+
+    Usa exactamente los mismos datos que la vista en pantalla (misma
+    incidencia, mismo cliente y vehículo). El PDF se crea en memoria con
+    reportlab y se envía como descarga; no se guarda ningún fichero en el
+    servidor. El botón "Imprimir" de la pantalla sigue valiendo para imprimir
+    o "guardar como PDF" desde el propio navegador; esto es la otra opción:
+    bajarse el archivo directamente.
+    """
+    con = obtener_conexion()
+    datos = _datos_resguardo(con, incidencia_id)
+    con.close()
+
+    if datos is None:
+        abort(404)
+
+    pdf = generar_resguardo_pdf(datos)
+    nombre = f"resguardo_{datos['matricula']}_{datos['id']:05d}.pdf"
+    return send_file(pdf, mimetype="application/pdf",
+                     as_attachment=True, download_name=nombre)
 
 
 @bp_incidencias.route("/historial")
@@ -236,6 +256,24 @@ def _guardar_incidencia(con, datos):
     })
     reparacion.crear_varias(con, incidencia_id, datos["reparaciones"])
     return incidencia_id
+
+
+def _datos_resguardo(con, incidencia_id):
+    """
+    Carga una incidencia completa (con su cliente y su vehículo) más sus
+    líneas de reparación, y lo devuelve como un diccionario listo para la
+    plantilla y para el PDF. Devuelve None si la ficha no existe.
+
+    Lo usan la vista del resguardo y la descarga en PDF, así no repetimos en
+    los dos sitios el mismo trabajo de juntar la incidencia con sus líneas.
+    """
+    fila = incidencia.obtener_completa(con, incidencia_id)
+    if fila is None:
+        return None
+    lineas = reparacion.listar_por_incidencia(con, incidencia_id)
+    datos = dict(fila)
+    datos["reparaciones"] = [linea["descripcion"] for linea in lineas]
+    return datos
 
 
 def _leer_formulario(form):
