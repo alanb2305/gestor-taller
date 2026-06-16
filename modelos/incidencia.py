@@ -132,3 +132,57 @@ def cambiar_estado(con, incidencia_id: int, nuevo_estado: str) -> None:
         "UPDATE incidencias SET estado = ? WHERE id = ?",
         (nuevo_estado, incidencia_id),
     )
+
+
+# ---------------------------------------------------------------------------
+# Consultas para las gráficas de la pantalla de inicio.
+# Son agregaciones (COUNT ... GROUP BY): no devuelven fichas sueltas, sino
+# recuentos. Devuelven estructuras de Python normales (diccionario o lista de
+# tuplas); el JSON que necesita Chart.js lo arma la ruta.
+# ---------------------------------------------------------------------------
+
+def contar_por_estado(con) -> dict:
+    """
+    Cuenta cuántas fichas hay en cada estado.
+    Devuelve un diccionario {estado: nº de fichas} solo con los estados que
+    tienen alguna ficha (la ruta ya completa con 0 los que falten).
+    """
+    filas = con.execute(
+        "SELECT estado, COUNT(*) AS total FROM incidencias GROUP BY estado"
+    ).fetchall()
+    return {fila["estado"]: fila["total"] for fila in filas}
+
+
+def contar_por_mes(con) -> list:
+    """
+    Cuenta las fichas por mes de entrada.
+    Devuelve una lista de tuplas (mes, total) ordenada de más antiguo a más
+    reciente, con el mes en formato 'AAAA-MM'. Como la fecha se guarda como
+    'AAAA-MM-DD', nos quedamos con los 7 primeros caracteres (substr).
+    """
+    filas = con.execute(
+        """SELECT substr(fecha_entrada, 1, 7) AS mes, COUNT(*) AS total
+             FROM incidencias
+            GROUP BY mes
+            ORDER BY mes"""
+    ).fetchall()
+    return [(fila["mes"], fila["total"]) for fila in filas]
+
+
+def clientes_con_mas_visitas(con, limite: int = 5) -> list:
+    """
+    Clientes que más vuelven al taller (los que tienen más fichas).
+    Devuelve una lista de tuplas (nombre, nº de fichas), de más a menos.
+    Junta las tres tablas: una ficha es de un vehículo, que es de un cliente.
+    """
+    filas = con.execute(
+        """SELECT c.nombre AS nombre, COUNT(i.id) AS total
+             FROM clientes   c
+             JOIN vehiculos  v ON v.cliente_id  = c.id
+             JOIN incidencias i ON i.vehiculo_id = v.id
+            GROUP BY c.id
+            ORDER BY total DESC, c.nombre
+            LIMIT ?""",
+        (limite,),
+    ).fetchall()
+    return [(fila["nombre"], fila["total"]) for fila in filas]
