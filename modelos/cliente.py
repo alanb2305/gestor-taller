@@ -33,6 +33,41 @@ def crear(con, datos: dict) -> int:
     return cursor.lastrowid
 
 
+def actualizar(con, cliente_id: int, datos: dict) -> None:
+    """
+    Actualiza los datos de un cliente que ya existe.
+
+    Lo usamos junto con el autorrelleno: cuando se teclea una matrícula ya
+    registrada, el formulario trae los datos guardados; si el usuario los
+    corrige (un teléfono nuevo, un cambio de domicilio...) y guarda, aquí
+    dejamos en la base de datos lo último que se ha escrito.
+
+    Se actualizan las mismas columnas que se rellenan en el formulario.
+    Las claves del diccionario son las mismas que en crear().
+    """
+    con.execute(
+        """UPDATE clientes
+              SET nombre    = ?,
+                  cif       = ?,
+                  telefono  = ?,
+                  domicilio = ?,
+                  numero    = ?,
+                  cp        = ?,
+                  poblacion = ?
+            WHERE id = ?""",
+        (
+            datos.get("nombre", ""),
+            datos.get("cif", ""),
+            datos.get("telefono", ""),
+            datos.get("domicilio", ""),
+            datos.get("numero", ""),
+            datos.get("cp", ""),
+            datos.get("poblacion", ""),
+            cliente_id,
+        ),
+    )
+
+
 def obtener_por_id(con, cliente_id: int):
     """Devuelve la fila del cliente con ese id, o None si no existe."""
     return con.execute(
