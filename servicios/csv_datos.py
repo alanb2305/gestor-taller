@@ -1,18 +1,13 @@
 """
-Importar y exportar datos en CSV (para usarlos en Excel o programa similar).
+Importar y exportar datos en CSV (clientes, vehículos e historial), para usarlos
+en Excel. Uso el módulo 'csv' de Python, nada externo.
 
-Se manejan tres conjuntos: clientes, vehículos y el historial de fichas.
-Usamos el módulo 'csv' de Python; no hace falta nada externo.
+Para que los CSV se abran bien en el Excel español uso separador ';' y
+codificación UTF-8 con BOM ('utf-8-sig'), así los acentos y la Ñ salen bien.
 
-Dos decisiones para que los CSV se abran bien en Excel en español:
-  - Separador ';'  (Excel en España usa ';' porque la coma es el decimal).
-  - Codificación UTF-8 con BOM ('utf-8-sig'), para que los acentos y la Ñ
-    salgan correctos al abrir el archivo directamente en Excel.
-
-Al importar reutilizamos las validaciones del formulario (servicios.validaciones):
-así una fila importada pasa los mismos controles que una ficha escrita a mano.
-Las funciones de importar NO hacen commit: de la transacción se encarga la
-ruta (igual que en el resto de la app), para confirmar o deshacer en un sitio.
+Al importar reaprovecho las validaciones del formulario, así una fila importada
+pasa los mismos controles que una ficha escrita a mano. Las funciones de
+importar NO hacen commit: de la transacción se encarga la ruta.
 """
 
 import csv
@@ -42,10 +37,9 @@ CABECERAS_HISTORIAL = ["numero_ficha", "fecha_entrada", "fecha_entrega", "estado
 
 def _a_descarga(cabeceras, filas):
     """
-    Construye el CSV en memoria y lo devuelve como BytesIO listo para descargar.
-    'filas' es una lista de diccionarios (uno por línea). Las claves de cada
-    diccionario que no estén en 'cabeceras' se ignoran (extrasaction="ignore"),
-    así no se exporta, por ejemplo, el id interno de la tabla.
+    Construye el CSV en memoria y lo devuelve como BytesIO. 'filas' es una lista
+    de diccionarios. Las claves que no estén en 'cabeceras' se ignoran
+    (extrasaction="ignore"), así no se exporta el id interno de la tabla.
     """
     texto = io.StringIO()
     escritor = csv.DictWriter(texto, fieldnames=cabeceras, delimiter=_SEP,
@@ -101,10 +95,8 @@ def _campo(fila, clave):
 
 def importar_clientes(con, archivo):
     """
-    Importa clientes. Para cada fila:
-      - Si el CIF ya existe -> actualiza ese cliente.
-      - Si no existe (o el CIF está vacío) -> lo da de alta como nuevo.
-    Las filas que no pasan las validaciones se descartan y se cuentan aparte.
+    Importa clientes. Si el CIF ya existe, actualiza ese cliente; si no (o está
+    vacío), lo da de alta. Las filas que no pasan las validaciones se descartan.
     Devuelve un resumen {anadidos, actualizados, descartados, errores}.
     """
     filas, error = _leer_filas(archivo)
@@ -132,12 +124,9 @@ def importar_clientes(con, archivo):
 
 def importar_vehiculos(con, archivo):
     """
-    Importa vehículos. Cada fila trae matrícula, marca/modelo y el CIF del
-    cliente dueño (cif_cliente), que TIENE que existir ya (importa antes los
-    clientes si hace falta).
-      - Si la matrícula ya existe -> actualiza su marca/modelo.
-      - Si no -> da de alta el vehículo enlazándolo con su cliente.
-    Devuelve un resumen.
+    Importa vehículos. Cada fila trae matrícula, marca/modelo y el CIF del dueño
+    (cif_cliente), que tiene que existir ya. Si la matrícula existe, actualiza su
+    marca/modelo; si no, da de alta el vehículo enlazándolo con su cliente.
     """
     filas, error = _leer_filas(archivo)
     if error:
@@ -173,13 +162,10 @@ def importar_vehiculos(con, archivo):
 
 def importar_historial(con, archivo):
     """
-    Importa fichas (historial). Cada fila trae los datos del cliente, del
-    vehículo y de la ficha, igual que el formulario. Usa la misma idea que al
-    guardar a mano: si la matrícula ya existe, reaprovecha el coche y su
-    cliente (y los pone al día); si no, los crea. Cada fila añade una ficha
-    nueva (un mismo coche puede entrar al taller varias veces). Las
-    reparaciones vienen en una sola celda separadas por '|'.
-    Devuelve un resumen {anadidos, descartados, errores}.
+    Importa fichas (historial). Cada fila trae cliente, vehículo y ficha, igual
+    que el formulario. Como al guardar a mano: si la matrícula existe, reaprovecha
+    el coche y su cliente; si no, los crea. Cada fila añade una ficha nueva. Las
+    reparaciones vienen en una celda separadas por '|'.
     """
     filas, error = _leer_filas(archivo)
     if error:
@@ -212,8 +198,8 @@ def importar_historial(con, archivo):
         reparaciones = [t.strip() for t in _campo(fila, "reparaciones").split("|")
                         if t.strip()]
 
-        # Crear o reaprovechar cliente + vehículo por matrícula. Es la misma
-        # lógica que al guardar desde el formulario (rutas/incidencias.py).
+        # Crear o reaprovechar cliente + vehículo por matrícula (misma lógica
+        # que al guardar desde el formulario, en rutas/incidencias.py).
         veh = vehiculo.obtener_por_matricula(con, datos["matricula"])
         if veh:
             vehiculo_id = veh["id"]
@@ -270,9 +256,8 @@ def _validar_cliente(datos):
 
 def _validar_historial(datos):
     """
-    Comprueba una fila del historial. Devuelve un mensaje de error o ''.
-    A diferencia del formulario, aquí la fecha de entrega es OPCIONAL: una
-    ficha que sigue en reparación todavía no tiene fecha de entrega.
+    Comprueba una fila del historial; devuelve un mensaje de error o ''. Aquí la
+    fecha de entrega es opcional (una ficha en reparación aún no la tiene).
     """
     if not datos["fecha_entrada"] or not validaciones.validar_fecha(datos["fecha_entrada"]):
         return "la fecha de entrada falta o no es válida."

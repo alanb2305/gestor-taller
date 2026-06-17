@@ -1,12 +1,9 @@
 /* ===========================================================================
    Gráficas de la pantalla de inicio (Chart.js).
 
-   Pedimos los datos al servidor (/estadisticas) y dibujamos dos gráficas:
-     - Fichas por estado  -> tarta (doughnut)
-     - Fichas por mes     -> barras
-
-   Igual que en el resto del proyecto, los datos los calcula el servidor; aquí
-   solo los pintamos. Chart.js se carga desde un CDN en inicio.html.
+   Pido los datos al servidor (/estadisticas) y dibujo dos gráficas: fichas por
+   estado (tarta) y fichas por mes (barras). Los datos los calcula el servidor;
+   aquí solo los pinto. Chart.js se carga desde un CDN en inicio.html.
    =========================================================================== */
 
 document.addEventListener("DOMContentLoaded", async function () {
@@ -25,8 +22,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     return;
   }
 
-  // ¿Hay datos? Sumamos las fichas de todos los estados; si es 0, no hay nada
-  // que pintar: escondemos las gráficas y mostramos un aviso.
+  // ¿Hay datos? Sumo las fichas de todos los estados; si es 0, escondo las
+  // gráficas y muestro un aviso.
   const totalFichas = datos.por_estado.datos.reduce((a, b) => a + b, 0);
   if (totalFichas === 0) {
     contenedor.style.display = "none";
@@ -34,8 +31,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     return;
   }
 
-  // Color de acento de la app y colores de cada estado (los mismos que las
-  // etiquetas del historial, para que se reconozcan de un vistazo).
+  // Color de acento y colores de cada estado (los mismos que las etiquetas del
+  // historial, para reconocerlos de un vistazo).
   const ACENTO = "#e07b00";
   const COLOR_ESTADO = {
     "recepcionado":  "#6c757d",   // gris

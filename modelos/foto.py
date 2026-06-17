@@ -1,12 +1,10 @@
 """
 Acceso a la tabla 'fotos'.
 
-Cada foto pertenece a una incidencia (incidencia_id) y guarda solo el nombre
-del archivo; la imagen en sí vive en DIR_FOTOS, fuera de la base de datos. Así
-la base de datos no engorda con los binarios y las fotos se sirven como
-ficheros normales. Mismo patrón que el resto de modelos: las funciones reciben
-la conexión ya abierta y no hacen commit ni la cierran (de eso se encarga la
-ruta).
+Cada foto pertenece a una incidencia y guarda solo el nombre del archivo; la
+imagen se guarda en DIR_FOTOS, fuera de la base de datos. Igual que el resto
+de modelos, las funciones reciben la conexión ya abierta (no hacen commit ni
+la cierran: de eso se encarga la ruta).
 """
 
 
@@ -31,11 +29,7 @@ def listar_por_incidencia(con, incidencia_id: int) -> list:
 
 
 def obtener_por_id(con, foto_id: int):
-    """
-    Devuelve la foto con ese id, o None si no existe.
-    La usan el borrado y la ruta que sirve la imagen, que además comprueban
-    que la foto sea de la incidencia indicada en la URL.
-    """
+    """Devuelve la foto con ese id, o None si no existe."""
     return con.execute(
         "SELECT * FROM fotos WHERE id = ?", (foto_id,)
     ).fetchone()

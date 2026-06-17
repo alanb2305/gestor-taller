@@ -1,39 +1,33 @@
 """
-Configuración general del proyecto.
-Aquí guardamos en un solo sitio las rutas de los ficheros y los datos
-fijos del taller, para no tenerlos repartidos por todo el código.
+Configuración del proyecto: rutas de los ficheros y datos del taller en un
+solo sitio, para no tenerlos repartidos por el código.
 """
 
 import os
 
-# Carpeta donde está este fichero = la raíz del proyecto.
-# Usamos rutas relativas a esta carpeta para que el proyecto funcione
-# en cualquier ordenador, sin rutas tipo "C:\Usuarios\...".
+# Raíz del proyecto. Trabajo con rutas relativas a esta carpeta para que
+# funcione en cualquier ordenador (sin rutas tipo "C:\Usuarios\...").
 DIR_BASE = os.path.dirname(os.path.abspath(__file__))
 
-# Rutas de la base de datos y del esquema SQL.
+# Base de datos y esquema SQL.
 RUTA_BD      = os.path.join(DIR_BASE, "datos", "taller.db")
 RUTA_ESQUEMA = os.path.join(DIR_BASE, "modelos", "esquema.sql")
 
-# Carpeta donde se guardan las fotos de los daños subidas a cada ficha.
-# Las imágenes viven aquí, fuera del código y de la base de datos (en la BD
-# solo guardamos el nombre del archivo). La carpeta se crea al arrancar, en
-# inicializar_bd(), igual que la de la base de datos.
+# Carpeta de las fotos de los daños. En la base de datos solo guardo el nombre
+# del archivo; la imagen se guarda aquí. La carpeta se crea en inicializar_bd().
 DIR_FOTOS = os.path.join(DIR_BASE, "datos", "fotos")
 
-# Clave que Flask usa para los mensajes flash y las sesiones.
-# (Es un valor de ejemplo; en un despliegue real se pondría uno secreto.)
+# Clave de Flask para los flash y las sesiones (de ejemplo; en producción
+# habría que poner una secreta de verdad).
 CLAVE_SECRETA = "cambia-esta-clave-en-produccion"
 
-# Nombre del producto (la marca de la aplicación, no el del taller).
+# Nombre de la aplicación.
 NOMBRE_APP = "GestorTaller"
 
 # -----------------------------------------------------------------------------
-# Datos del taller.
-# La aplicación es genérica: NO tiene ningún taller concreto en el código.
-# Los valores de abajo son de EJEMPLO; para usar la app en un taller real solo
-# hay que cambiar este diccionario (no hay que tocar nada más). Estos datos se
-# usan en las pantallas y en el resguardo en PDF.
+# Datos del taller. La app es genérica: estos valores son de EJEMPLO y para
+# usarla en un taller real solo hay que cambiar este diccionario. Se usan en
+# las pantallas y en el resguardo.
 # -----------------------------------------------------------------------------
 TALLER = {
     "nombre":       "Taller de Ejemplo, S.L.",

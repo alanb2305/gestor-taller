@@ -1,19 +1,13 @@
 """
 Acceso a la tabla 'incidencias' (las órdenes de trabajo).
 
-Una incidencia es una entrada del coche al taller. Enlaza con un
-vehículo (vehiculo_id) y va pasando por varios estados durante la
-reparación.
-
-Las fechas se guardan como AAAA-MM-DD, que es el formato de SQLite y también
-el que devuelve el <input type="date"> del formulario, así que se guardan tal
-cual. Para mostrarlas a la española (dd/mm/aaaa) está el filtro fecha_es de la
-plantilla; aquí no convertimos nada.
+Una incidencia es una entrada del coche al taller: enlaza con un vehículo y va
+pasando por varios estados. Las fechas se guardan en formato ISO (AAAA-MM-DD),
+que es el que usan SQLite y el <input type="date">, así que se guardan tal cual.
 """
 
-# Estados válidos, en el orden natural del trabajo. Es el mismo CHECK que
-# hay en el esquema; lo repetimos aquí para validar antes de tocar la base
-# de datos y poder dar un mensaje claro.
+# Estados válidos, en el orden del trabajo. Es el mismo CHECK del esquema; lo
+# repito aquí para validar antes de tocar la base de datos.
 ESTADOS = ("recepcionado", "en reparación", "terminado", "entregado")
 
 
@@ -39,11 +33,9 @@ def crear(con, datos: dict) -> int:
 
 def obtener_completa(con, incidencia_id: int):
     """
-    Devuelve, en una sola fila, todos los datos de una incidencia junto
-    con los de su vehículo y su cliente (dos JOIN encadenados). Es lo que
-    necesita el resguardo para volver a imprimirse desde el historial.
-    Las líneas de reparación se piden aparte con
-    reparacion.listar_por_incidencia().
+    Devuelve en una sola fila los datos de la incidencia con los de su vehículo
+    y su cliente (dos JOIN), que es lo que necesita el resguardo. Las líneas de
+    reparación se piden aparte con reparacion.listar_por_incidencia().
     """
     return con.execute(
         """SELECT i.*,
@@ -66,10 +58,8 @@ def obtener_completa(con, incidencia_id: int):
 
 def obtener_estado(con, incidencia_id: int):
     """
-    Devuelve solo el estado de una incidencia, o None si no existe.
-    Lo usa avanzar_estado: para calcular el siguiente estado no hacen falta los
-    datos del cliente ni del vehículo, solo saber en qué estado está, así que
-    nos ahorramos los JOIN de obtener_completa().
+    Devuelve solo el estado de una incidencia, o None si no existe. Para avanzar
+    de estado no hacen falta los JOIN de obtener_completa(), solo el estado.
     """
     fila = con.execute(
         "SELECT estado FROM incidencias WHERE id = ?",
@@ -126,15 +116,9 @@ def buscar(con, texto: str, limite: int = 50) -> list:
 
 def entregas_pendientes(con) -> list:
     """
-    Entregas que aún están pendientes, para la agenda.
-
-    Trae las fichas que NO se han entregado y que tienen fecha de entrega,
-    junto con su vehículo y su cliente (mismo JOIN que listar()). Dejamos fuera
-    a propósito dos casos: las ya 'entregado' (no hay nada que agendar) y las
-    que no tienen fecha_entrega (no se pueden situar en la agenda).
-
-    Ordenamos por fecha_entrega: como se guarda en ISO (AAAA-MM-DD), ordenar el
-    texto ordena igual que por fecha (de la más urgente a la más lejana).
+    Fichas pendientes de entregar para la agenda: las que NO están 'entregado' y
+    tienen fecha de entrega. Se ordenan por fecha_entrega (en ISO, así el orden
+    del texto coincide con el cronológico: de la más urgente a la más lejana).
     """
     return con.execute(
         """SELECT i.id            AS id,
@@ -155,18 +139,14 @@ def entregas_pendientes(con) -> list:
 
 def siguiente_estado(estado_actual: str):
     """
-    Devuelve el estado que va justo después del actual en el ciclo de trabajo
-    (recepcionado -> en reparación -> terminado -> entregado), o None si la
-    ficha ya está en el último estado ('entregado').
-
-    Lo usa el botón de "avanzar estado" del historial: el orden es el de la
-    tupla ESTADOS, así que el siguiente es simplemente el de la posición + 1.
+    Devuelve el estado siguiente al actual (recepcionado -> en reparación ->
+    terminado -> entregado), o None si ya está en el último. Como el orden es el
+    de la tupla ESTADOS, el siguiente es el de la posición + 1.
     """
     try:
         posicion = ESTADOS.index(estado_actual)
     except ValueError:
-        # Estado desconocido (no debería pasar: la columna tiene un CHECK en
-        # el esquema). Por si acaso, no proponemos ningún avance.
+        # Estado desconocido (no debería pasar por el CHECK del esquema).
         return None
     if posicion + 1 < len(ESTADOS):
         return ESTADOS[posicion + 1]
@@ -183,17 +163,14 @@ def cambiar_estado(con, incidencia_id: int, nuevo_estado: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Consultas para las gráficas de la pantalla de inicio.
-# Son agregaciones (COUNT ... GROUP BY): no devuelven fichas sueltas, sino
-# recuentos. Devuelven estructuras de Python normales (diccionario o lista de
-# tuplas); el JSON que necesita Chart.js lo arma la ruta.
+# Consultas para las gráficas de la pantalla de inicio (COUNT ... GROUP BY).
+# Devuelven recuentos; el JSON que necesita Chart.js lo arma la ruta.
 # ---------------------------------------------------------------------------
 
 def contar_por_estado(con) -> dict:
     """
-    Cuenta cuántas fichas hay en cada estado.
-    Devuelve un diccionario {estado: nº de fichas} solo con los estados que
-    tienen alguna ficha (la ruta ya completa con 0 los que falten).
+    Cuenta las fichas que hay en cada estado. Devuelve {estado: nº de fichas}
+    solo con los estados que tienen alguna (la ruta completa con 0 los demás).
     """
     filas = con.execute(
         "SELECT estado, COUNT(*) AS total FROM incidencias GROUP BY estado"
@@ -203,10 +180,8 @@ def contar_por_estado(con) -> dict:
 
 def contar_por_mes(con) -> list:
     """
-    Cuenta las fichas por mes de entrada.
-    Devuelve una lista de tuplas (mes, total) ordenada de más antiguo a más
-    reciente, con el mes en formato 'AAAA-MM'. Como la fecha se guarda como
-    'AAAA-MM-DD', nos quedamos con los 7 primeros caracteres (substr).
+    Cuenta las fichas por mes de entrada. Devuelve una lista de tuplas
+    (mes, total) con el mes en 'AAAA-MM' (los 7 primeros caracteres de la fecha).
     """
     filas = con.execute(
         """SELECT substr(fecha_entrada, 1, 7) AS mes, COUNT(*) AS total
@@ -226,10 +201,9 @@ def contar_por_vehiculo(con, vehiculo_id: int) -> int:
 
 def listar_completo(con) -> list:
     """
-    Todas las fichas con TODOS sus datos (vehículo, cliente y las reparaciones
-    juntas en una sola celda separadas por '|'), para exportar el historial a
-    CSV. group_concat es de SQLite: junta en un solo texto las varias
-    reparaciones de una misma ficha.
+    Todas las fichas con todos sus datos (vehículo, cliente y las reparaciones
+    en una sola celda separadas por '|'), para exportar el historial a CSV.
+    group_concat (de SQLite) junta en un texto las reparaciones de cada ficha.
     """
     return con.execute(
         """SELECT i.id             AS numero_ficha,

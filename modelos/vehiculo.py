@@ -18,12 +18,8 @@ def crear(con, matricula: str, marca_modelo: str, cliente_id: int) -> int:
 
 def actualizar_marca_modelo(con, vehiculo_id: int, marca_modelo: str) -> None:
     """
-    Corrige la marca y el modelo de un vehículo ya registrado.
-
-    La matrícula NO se cambia: es lo que identifica al coche. Pero la marca
-    o el modelo sí pueden haberse escrito mal la primera vez, así que cuando
-    se reutiliza una matrícula con el autorrelleno dejamos guardado lo que
-    aparezca escrito al guardar.
+    Corrige la marca y el modelo de un vehículo. La matrícula no se toca (es lo
+    que identifica al coche), pero la marca/modelo sí se pueden poner al día.
     """
     con.execute(
         "UPDATE vehiculos SET marca_modelo = ? WHERE id = ?",
@@ -41,10 +37,9 @@ def obtener_por_matricula(con, matricula: str):
 
 def datos_para_autorrelleno(con, matricula: str):
     """
-    Para el autorrelleno del formulario: a partir de una matrícula que ya
-    está registrada, devuelve en UNA sola consulta los datos del vehículo
-    y los de su cliente, juntando las dos tablas con un JOIN.
-    Devuelve None si la matrícula es nueva (todavía no existe).
+    Para el autorrelleno: a partir de una matrícula ya registrada, devuelve en
+    una sola consulta (JOIN) los datos del vehículo y de su cliente. None si la
+    matrícula es nueva.
     """
     return con.execute(
         """SELECT v.id            AS vehiculo_id,
@@ -67,9 +62,9 @@ def datos_para_autorrelleno(con, matricula: str):
 
 def listar_todos_con_cliente(con) -> list:
     """
-    Todos los vehículos junto con el CIF de su dueño, para la exportación a CSV.
-    Usamos el CIF (no el id interno, que cambia de una base de datos a otra)
-    como forma de volver a enlazar cada coche con su cliente al importar.
+    Todos los vehículos con el CIF de su dueño, para exportar a CSV. Uso el CIF
+    (no el id interno, que cambia entre bases de datos) para volver a enlazar
+    cada coche con su cliente al importar.
     """
     return con.execute(
         """SELECT v.matricula     AS matricula,

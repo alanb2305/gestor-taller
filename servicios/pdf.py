@@ -1,18 +1,9 @@
 """
-Generación del resguardo en PDF.
-
-Construimos el PDF a partir de los mismos datos de la incidencia que se ven en
-pantalla (cliente, vehículo y trabajos), usando reportlab. Trabajamos con
-"bloques" de alto nivel (párrafos y tablas) y dejamos que reportlab los vaya
-colocando, en lugar de dibujar texto en coordenadas exactas como hacía el
-programa de escritorio original: así el código es mucho más fácil de leer.
-
-El PDF se genera en memoria (un BytesIO) y se devuelve a la ruta, que lo manda
-al navegador como descarga. No se guarda ningún fichero en el servidor.
-
-Nota de diseño: la maqueta del PDF vive aquí, en Python; la plantilla
-resguardo.html es para ver e imprimir desde el navegador. Las dos salidas
-parten de los mismos datos, solo cambia el formato.
+Generación del resguardo en PDF con reportlab, a partir de los mismos datos de
+la incidencia que se ven en pantalla. Trabajo con bloques (párrafos y tablas) y
+dejo que reportlab los vaya colocando, en lugar de dibujar en coordenadas
+exactas (más fácil de leer). El PDF se genera en memoria y se manda como
+descarga; no se guarda ningún fichero en el servidor.
 """
 
 import io
@@ -67,9 +58,8 @@ def _estilos():
 
 def generar_resguardo_pdf(datos):
     """
-    Devuelve un BytesIO con el PDF del resguardo de una incidencia.
-    'datos' es el mismo diccionario que usa la plantilla: incidencia + cliente
-    + vehículo + la lista de reparaciones.
+    Devuelve un BytesIO con el PDF del resguardo. 'datos' es el mismo diccionario
+    que usa la plantilla (incidencia + cliente + vehículo + reparaciones).
     """
     buffer = io.BytesIO()
     documento = SimpleDocTemplate(

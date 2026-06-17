@@ -1,21 +1,14 @@
 """
 Acceso a la tabla 'clientes'.
 
-Cada función recibe una conexión ya abierta (con) y se ocupa solo de su
-consulta. No abre, no cierra y no hace commit: de eso se encarga quien
-llama (normalmente una ruta), así podemos agrupar varias altas en una
-misma transacción.
-
-Todas las consultas usan parámetros (?) en lugar de pegar el texto en el
-SQL, para evitar inyección SQL.
+Cada función recibe la conexión ya abierta (con) y hace solo su consulta; el
+commit y el cierre los hace la ruta, así varias altas pueden ir en la misma
+transacción. Uso parámetros (?) en el SQL para evitar inyección SQL.
 """
 
 
 def crear(con, datos: dict) -> int:
-    """
-    Inserta un cliente y devuelve su id (el AUTOINCREMENT de SQLite).
-    'datos' es un diccionario con las claves de las columnas.
-    """
+    """Inserta un cliente y devuelve su id. 'datos' tiene las claves de las columnas."""
     cursor = con.execute(
         """INSERT INTO clientes (nombre, cif, telefono, domicilio,
                                  numero, cp, poblacion)
@@ -35,15 +28,9 @@ def crear(con, datos: dict) -> int:
 
 def actualizar(con, cliente_id: int, datos: dict) -> None:
     """
-    Actualiza los datos de un cliente que ya existe.
-
-    Lo usamos junto con el autorrelleno: cuando se teclea una matrícula ya
-    registrada, el formulario trae los datos guardados; si el usuario los
-    corrige (un teléfono nuevo, un cambio de domicilio...) y guarda, aquí
-    dejamos en la base de datos lo último que se ha escrito.
-
-    Se actualizan las mismas columnas que se rellenan en el formulario.
-    Las claves del diccionario son las mismas que en crear().
+    Actualiza los datos de un cliente. Lo uso con el autorrelleno: si se reutiliza
+    una matrícula y se corrige algún dato (teléfono, domicilio...), al guardar se
+    queda lo último escrito. Mismas claves que en crear().
     """
     con.execute(
         """UPDATE clientes
@@ -82,10 +69,7 @@ def listar_todos(con) -> list:
 
 
 def obtener_por_cif(con, cif: str):
-    """
-    Devuelve el cliente con ese CIF/DNI, o None. Lo usa la importación para
-    saber si un cliente ya existe (y entonces actualizarlo en vez de duplicarlo).
-    """
+    """Devuelve el cliente con ese CIF/DNI, o None. Lo usa la importación de CSV."""
     return con.execute(
         "SELECT * FROM clientes WHERE cif = ?", (cif,)
     ).fetchone()
@@ -98,9 +82,8 @@ def borrar(con, cliente_id: int) -> None:
 
 def listar_con_resumen(con) -> list:
     """
-    Todos los clientes con cuántos vehículos tiene cada uno, para la pantalla
-    de gestión. El LEFT JOIN hace que los clientes sin coches salgan con 0
-    (con un JOIN normal no aparecerían).
+    Todos los clientes con cuántos vehículos tiene cada uno, para la pantalla de
+    gestión. Uso LEFT JOIN para que los clientes sin coches salgan con 0.
     """
     return con.execute(
         """SELECT c.*, COUNT(v.id) AS n_vehiculos

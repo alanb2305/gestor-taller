@@ -1,13 +1,9 @@
 """
 Gestión de vehículos (CRUD: listar, crear, editar y borrar).
 
-Cada vehículo pertenece a un cliente, así que al crear o editar se elige el
-dueño de una lista desplegable. La matrícula identifica al coche: al crear se
-comprueba que no esté repetida, y al editar NO se puede cambiar (si está mal,
-se borra el coche y se crea de nuevo).
-
-No se permite borrar un vehículo que tenga fichas en el historial, para no
-perder ese historial por error.
+Cada vehículo pertenece a un cliente, que se elige de un desplegable. La
+matrícula identifica al coche: al crear se comprueba que no esté repetida y al
+editar no se puede cambiar. No se deja borrar un vehículo con fichas.
 """
 
 from flask import (Blueprint, render_template, request,
@@ -38,7 +34,7 @@ def nuevo():
     if request.method == "POST":
         datos = _leer_formulario(request.form)
         errores = validar_vehiculo(datos)
-        # Comprobaciones que dependen de la base de datos:
+        # Comprobaciones que dependen de la base de datos (no del formato):
         if "matricula" not in errores and vehiculo.obtener_por_matricula(con, datos["matricula"]):
             errores["matricula"] = "Ya existe un vehículo con esa matrícula."
         if not datos["cliente_id"]:
@@ -73,7 +69,7 @@ def editar(vehiculo_id):
 
     if request.method == "POST":
         datos = _leer_formulario(request.form)
-        # La matrícula no se edita: usamos siempre la que ya tiene el coche.
+        # La matrícula no se edita: uso siempre la que ya tiene el coche.
         datos["matricula"] = fila["matricula"]
         errores = validar_vehiculo(datos)
         if not datos["cliente_id"]:

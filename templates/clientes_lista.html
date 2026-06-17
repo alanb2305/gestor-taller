@@ -38,9 +38,8 @@
                      class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-pencil"></i> Editar
                   </a>
-                  {# Borrar es un POST (cambia datos) y pide confirmación. Si el
-                     cliente tiene coches, el botón sale deshabilitado: el
-                     servidor también lo impediría, pero así se ve antes. #}
+                  {# Borrar es POST y pide confirmación. Si el cliente tiene
+                     coches, el botón sale deshabilitado (el servidor lo impide). #}
                   {% if c.n_vehiculos == 0 %}
                     <form method="post"
                           action="{{ url_for('clientes.borrar', cliente_id=c.id) }}"
