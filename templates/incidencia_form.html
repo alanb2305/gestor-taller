@@ -9,7 +9,7 @@
   {# novalidate desactiva la validación del navegador para que controle la
      nuestra (JS + servidor) y no salgan dos avisos. El id lo usa validaciones.js. #}
   <form method="post" action="{{ url_for('incidencias.nueva') }}"
-        id="form-incidencia" novalidate>
+        id="form-incidencia" enctype="multipart/form-data" novalidate>
 
     {# ==================== FECHAS ==================== #}
     <div class="card mb-4">
@@ -48,7 +48,7 @@
           <div class="col-12 col-md-3">
             <label for="matricula" class="form-label">Matrícula *</label>
             <input type="text" id="matricula" name="matricula"
-                   value="{{ datos.matricula }}"
+                   value="{{ datos.matricula }}" placeholder="1234 BCD"
                    class="form-control text-uppercase {% if errores.matricula %}is-invalid{% endif %}">
             <div class="invalid-feedback">{{ errores.matricula }}</div>
           </div>
@@ -106,7 +106,7 @@
           <div class="col-12 col-md-4">
             <label for="cif" class="form-label">DNI / NIE / CIF</label>
             <input type="text" id="cif" name="cif"
-                   value="{{ datos.cif }}"
+                   value="{{ datos.cif }}" placeholder="12345678Z"
                    class="form-control text-uppercase {% if errores.cif %}is-invalid{% endif %}">
             <div class="invalid-feedback">{{ errores.cif }}</div>
           </div>
@@ -126,7 +126,7 @@
           <div class="col-12 col-md-4">
             <label for="cp" class="form-label">Código postal</label>
             <input type="text" id="cp" name="cp" inputmode="numeric" maxlength="5"
-                   value="{{ datos.cp }}"
+                   value="{{ datos.cp }}" placeholder="28013"
                    class="form-control {% if errores.cp %}is-invalid{% endif %}">
             <div class="invalid-feedback">{{ errores.cp }}</div>
           </div>
@@ -140,7 +140,7 @@
           <div class="col-12 col-md-4">
             <label for="telefono" class="form-label">Teléfono</label>
             <input type="tel" id="telefono" name="telefono" inputmode="numeric"
-                   value="{{ datos.telefono }}"
+                   value="{{ datos.telefono }}" placeholder="612 345 678"
                    class="form-control {% if errores.telefono %}is-invalid{% endif %}">
             <div class="invalid-feedback">{{ errores.telefono }}</div>
           </div>
@@ -196,12 +196,24 @@
       </div>
     </div>
 
-    {# Aviso: las fotos se añaden después, en el resguardo. La ficha tiene que
-       estar guardada (tener id) antes de poder colgarle fotos. #}
-    <div class="alert alert-info d-flex align-items-center gap-2" role="alert">
-      <i class="bi bi-info-circle"></i>
-      <span>Las fotos de los daños se añaden al generar el resguardo, desde la
-            propia ficha.</span>
+    {# ==================== FOTOS DE LOS DAÑOS ==================== #}
+    {# Las fotos se eligen aquí, al rellenar la ficha, y se suben junto con ella
+       al generar el resguardo (por eso el formulario va como multipart). La
+       validación de tipo y tamaño se hace en el servidor (servicios/fotos.py);
+       el accept="image/*" es solo una ayuda. #}
+    <div class="card mb-4">
+      <div class="card-header">Fotos de los daños</div>
+      <div class="card-body">
+        <p class="text-muted small">
+          Adjunta fotos del estado del coche al recibirlo (opcional). Puedes
+          seleccionar varias a la vez. Se admiten JPG, PNG o WEBP de hasta 5 MB
+          por foto.
+        </p>
+        <input type="file" id="fotos" name="fotos" class="form-control"
+               accept="image/*" multiple>
+        {# Miniaturas de las fotos elegidas, antes de enviar (las pinta fotos.js). #}
+        <div id="previsualizacion-fotos" class="previsualizacion-fotos"></div>
+      </div>
     </div>
 
     {# ==================== BOTONES ==================== #}
@@ -227,4 +239,6 @@
   <script src="{{ url_for('static', filename='js/autorrelleno.js') }}"></script>
   {# Trabajos: botones + y papelera para añadir y quitar líneas de trabajo. #}
   <script src="{{ url_for('static', filename='js/trabajos.js') }}"></script>
+  {# Fotos: previsualiza las fotos de los daños elegidas antes de enviarlas. #}
+  <script src="{{ url_for('static', filename='js/fotos.js') }}"></script>
 {% endblock %}
