@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block titulo %}Agenda de entregas · {{ app_nombre }}{% endblock %}
+
+{% block contenido %}
+
+  <h1 class="h4 mb-4">Agenda de entregas</h1>
+
+  {# La agenda reúne las fichas sin entregar que tienen fecha de entrega,
+     repartidas en tres grupos según esa fecha comparada con hoy. Las fichas sin
+     fecha de entrega no salen: no hay nada que agendar. #}
+
+  {# Macro para no repetir tres veces la misma tabla. 'resaltar' pinta las filas
+     en rojo (table-danger), que usamos en el grupo de las vencidas. #}
+  {% macro tabla_entregas(fichas, resaltar=false) %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Nº</th>
+            <th>Entrega</th>
+            <th>Matrícula</th>
+            <th>Vehículo</th>
+            <th>Cliente</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in fichas %}
+            <tr class="{{ 'table-danger' if resaltar }}">
+              <td>{{ "%05d"|format(f.id) }}</td>
+              <td>{{ f.fecha_entrega | fecha_es }}</td>
+              <td>{{ f.matricula }}</td>
+              <td>{{ f.marca_modelo }}</td>
+              <td>{{ f.nombre }}</td>
+              <td class="text-end">
+                <a href="{{ url_for('incidencias.resguardo', incidencia_id=f.id) }}"
+                   class="btn btn-sm btn-outline-secondary">
+                  <i class="bi bi-eye"></i> Ver
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endmacro %}
+
+  {# -------------------- Vencidas (la fecha de entrega ya pasó) -------------------- #}
+  {% if vencidas %}
+    <section class="mb-4">
+      <h2 class="h6 text-danger">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        Vencidas <span class="badge bg-danger">{{ vencidas|length }}</span>
+      </h2>
+      {{ tabla_entregas(vencidas, resaltar=true) }}
+    </section>
+  {% endif %}
+
+  {# -------------------- Hoy -------------------- #}
+  {% if de_hoy %}
+    <section class="mb-4">
+      <h2 class="h6">
+        <i class="bi bi-calendar-event text-acento"></i>
+        Para hoy <span class="badge bg-warning text-dark">{{ de_hoy|length }}</span>
+      </h2>
+      {{ tabla_entregas(de_hoy) }}
+    </section>
+  {% endif %}
+
+  {# -------------------- Próximas -------------------- #}
+  {% if proximas %}
+    <section class="mb-4">
+      <h2 class="h6">
+        <i class="bi bi-calendar-check"></i>
+        Próximas <span class="badge bg-secondary">{{ proximas|length }}</span>
+      </h2>
+      {{ tabla_entregas(proximas) }}
+    </section>
+  {% endif %}
+
+  {# Si los tres grupos están vacíos, no hay nada pendiente. #}
+  {% if not vencidas and not de_hoy and not proximas %}
+    <div class="alert alert-light border text-center">
+      No hay entregas pendientes. ¡Todo al día!
+    </div>
+  {% endif %}
+
+{% endblock %}

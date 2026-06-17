@@ -7,7 +7,7 @@ no tienen que preocuparse de cómo se abre la conexión.
 import os
 import sqlite3
 
-from config import RUTA_BD, RUTA_ESQUEMA
+from config import RUTA_BD, RUTA_ESQUEMA, DIR_FOTOS
 
 
 def obtener_conexion():
@@ -28,6 +28,9 @@ def inicializar_bd():
     porque el esquema usa CREATE TABLE IF NOT EXISTS.
     """
     os.makedirs(os.path.dirname(RUTA_BD), exist_ok=True)
+    # Carpeta de las fotos de los daños: igual que la de la base de datos, si no
+    # existe se crea y si ya está no pasa nada (las fotos no van al repositorio).
+    os.makedirs(DIR_FOTOS, exist_ok=True)
 
     with open(RUTA_ESQUEMA, encoding="utf-8") as fichero:
         sql = fichero.read()

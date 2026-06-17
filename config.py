@@ -15,6 +15,12 @@ DIR_BASE = os.path.dirname(os.path.abspath(__file__))
 RUTA_BD      = os.path.join(DIR_BASE, "datos", "taller.db")
 RUTA_ESQUEMA = os.path.join(DIR_BASE, "modelos", "esquema.sql")
 
+# Carpeta donde se guardan las fotos de los daños subidas a cada ficha.
+# Las imágenes viven aquí, fuera del código y de la base de datos (en la BD
+# solo guardamos el nombre del archivo). La carpeta se crea al arrancar, en
+# inicializar_bd(), igual que la de la base de datos.
+DIR_FOTOS = os.path.join(DIR_BASE, "datos", "fotos")
+
 # Clave que Flask usa para los mensajes flash y las sesiones.
 # (Es un valor de ejemplo; en un despliegue real se pondría uno secreto.)
 CLAVE_SECRETA = "cambia-esta-clave-en-produccion"

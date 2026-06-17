@@ -11,6 +11,7 @@ from modelos.conexion import inicializar_bd
 from servicios.formato import fecha_es
 from rutas.principal import bp_principal
 from rutas.incidencias import bp_incidencias
+from rutas.agenda import bp_agenda
 from rutas.datos import bp_datos
 from rutas.clientes import bp_clientes
 from rutas.vehiculos import bp_vehiculos
@@ -54,6 +55,7 @@ app.add_template_filter(fecha_es, "fecha_es")
 # proyecto añadiremos las de clientes, vehículos, etc.
 app.register_blueprint(bp_principal)
 app.register_blueprint(bp_incidencias)
+app.register_blueprint(bp_agenda)
 app.register_blueprint(bp_datos)
 app.register_blueprint(bp_clientes)
 app.register_blueprint(bp_vehiculos)

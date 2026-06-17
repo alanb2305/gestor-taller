@@ -50,3 +50,15 @@ CREATE TABLE IF NOT EXISTS reparaciones (
     descripcion    TEXT NOT NULL,
     FOREIGN KEY (incidencia_id) REFERENCES incidencias(id) ON DELETE CASCADE
 );
+
+-- Fotos de los daños del vehículo, asociadas a una incidencia.
+-- Guardamos solo el nombre del archivo; la imagen en sí vive en datos/fotos
+-- (DIR_FOTOS), fuera de la base de datos. ON DELETE CASCADE: si se borra la
+-- incidencia se borran también sus filas de fotos (el fichero de cada foto se
+-- borra desde el código, en servicios/fotos.py).
+CREATE TABLE IF NOT EXISTS fotos (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    incidencia_id  INTEGER NOT NULL,
+    nombre_archivo TEXT NOT NULL,
+    FOREIGN KEY (incidencia_id) REFERENCES incidencias(id) ON DELETE CASCADE
+);
