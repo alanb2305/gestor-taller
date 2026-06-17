@@ -49,6 +49,26 @@ Abre en el navegador: http://127.0.0.1:8000
 
 La base de datos (`datos/taller.db`) se crea sola la primera vez.
 
+## Generar un ejecutable (.exe) para el tribunal
+
+Para que el tribunal pueda probar la aplicación sin instalar Python ni
+dependencias, se puede empaquetar todo en un único `.exe` con
+[PyInstaller](https://pyinstaller.org/). Basta con hacer doble clic en el `.exe`:
+arranca el servidor y abre el navegador con la aplicación ya en marcha.
+
+Desde la carpeta del proyecto, en Windows:
+
+       pip install pyinstaller
+       pyinstaller gestor_taller.spec
+
+El ejecutable queda en `dist\GestorTaller.exe`. La base de datos y las fotos se
+crean en una carpeta `datos\` junto al `.exe` la primera vez que se abre, así que
+conviene dejar el `.exe` en su propia carpeta.
+
+> El `.exe` hay que generarlo en Windows (PyInstaller no crea ejecutables de
+> Windows desde Linux o Mac). El archivo `gestor_taller.spec` es la «receta» del
+> empaquetado y `construir_exe.ps1` hace esos dos pasos de una sola vez.
+
 ## Datos de ejemplo (opcional)
 
 Para rellenar la base con clientes, coches y fichas de prueba y poder enseñar

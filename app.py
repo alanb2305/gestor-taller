@@ -3,9 +3,11 @@ Punto de entrada de la app: crea la app de Flask, prepara la base de datos
 y registra las rutas (que están repartidas en la carpeta 'rutas').
 """
 
+import os
+
 from flask import Flask
 
-from config import NOMBRE_APP, CLAVE_SECRETA, TALLER
+from config import NOMBRE_APP, CLAVE_SECRETA, TALLER, DIR_RECURSOS
 from modelos.conexion import inicializar_bd
 from servicios.formato import fecha_es
 from rutas.principal import bp_principal
@@ -15,7 +17,15 @@ from rutas.datos import bp_datos
 from rutas.clientes import bp_clientes
 from rutas.vehiculos import bp_vehiculos
 
-app = Flask(__name__)
+# Le digo a Flask dónde están las plantillas y los archivos estáticos a partir de
+# DIR_RECURSOS. En ejecución normal es la carpeta del proyecto (lo de siempre);
+# dentro del .exe es la carpeta temporal donde PyInstaller deja esos archivos, así
+# que las plantillas se encuentran en los dos casos.
+app = Flask(
+    __name__,
+    template_folder=os.path.join(DIR_RECURSOS, "templates"),
+    static_folder=os.path.join(DIR_RECURSOS, "static"),
+)
 
 # Clave que usa Flask para los mensajes flash (y las sesiones).
 app.secret_key = CLAVE_SECRETA

@@ -2,6 +2,10 @@
 __pycache__/
 *.pyc
 
+# PyInstaller (lo que se genera al construir el .exe; el .spec sí se sube)
+build/
+dist/
+
 # Entornos virtuales
 venv/
 .venv/
