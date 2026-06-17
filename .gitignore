@@ -8,3 +8,6 @@ venv/
 
 # Base de datos generada (no se sube al repositorio)
 datos/*.db
+
+# Fotos de los daños subidas (tampoco se suben al repositorio)
+datos/fotos/

@@ -15,12 +15,15 @@ el cliente, el vehículo, la incidencia y sus reparaciones, o no se graba nada.
 from datetime import date, timedelta
 
 from flask import (Blueprint, render_template, request,
-                   redirect, url_for, flash, abort, jsonify, send_file)
+                   redirect, url_for, flash, abort, jsonify, send_file,
+                   send_from_directory)
 
+from config import DIR_FOTOS
 from modelos.conexion import obtener_conexion
-from modelos import cliente, vehiculo, incidencia, reparacion
+from modelos import cliente, vehiculo, incidencia, reparacion, foto
 from servicios.validaciones import validar_incidencia, normalizar_matricula
 from servicios.pdf import generar_resguardo_pdf
+from servicios import fotos
 
 # url_prefix: todas las rutas de este blueprint empiezan por /incidencias.
 bp_incidencias = Blueprint("incidencias", __name__, url_prefix="/incidencias")
@@ -141,12 +144,18 @@ def resguardo(incidencia_id):
     con = obtener_conexion()
     try:
         datos = _datos_resguardo(con, incidencia_id)
+        # Las fotos de los daños se gestionan desde el resguardo (aquí la ficha
+        # ya existe y tiene id). Las cargamos dentro de la misma conexión, solo
+        # si la ficha existe; el PDF no las usa, por eso van aparte y no en
+        # _datos_resguardo.
+        fotos_ficha = (foto.listar_por_incidencia(con, incidencia_id)
+                       if datos is not None else [])
     finally:
         con.close()
 
     if datos is None:
         abort(404)   # la ficha no existe (id inventado en la URL)
-    return render_template("resguardo.html", datos=datos)
+    return render_template("resguardo.html", datos=datos, fotos=fotos_ficha)
 
 
 @bp_incidencias.route("/<int:incidencia_id>/pdf")
@@ -174,6 +183,105 @@ def descargar_pdf(incidencia_id):
     nombre = f"resguardo_{datos['matricula']}_{datos['id']:05d}.pdf"
     return send_file(pdf, mimetype="application/pdf",
                      as_attachment=True, download_name=nombre)
+
+
+# ---------------------------------------------------------------------------
+# Fotos de los daños de una ficha. Se gestionan desde el resguardo: subir,
+# borrar y servir cada imagen. La validación de tipo y tamaño la hace el
+# servicio servicios/fotos.py (en el servidor), y la imagen se sirve siempre
+# con send_from_directory para no construir rutas a mano (evita path traversal).
+# ---------------------------------------------------------------------------
+
+@bp_incidencias.route("/<int:incidencia_id>/fotos", methods=["POST"])
+def subir_fotos(incidencia_id):
+    """
+    Sube una o varias fotos de los daños a una ficha.
+
+    Cada archivo pasa por servicios.fotos.guardar, que valida tipo y tamaño y
+    devuelve None si no vale; solo guardamos en la base de datos las que se
+    graben. Dejamos un flash con el resumen (subidas / descartadas) y volvemos
+    al resguardo (patrón Post/Redirect/Get).
+    """
+    con = obtener_conexion()
+    try:
+        # La ficha tiene que existir: si no, no tiene sentido colgarle fotos.
+        if incidencia.obtener_estado(con, incidencia_id) is None:
+            abort(404)
+
+        # getlist recoge todos los ficheros del input (que lleva 'multiple').
+        # Nos quedamos con los que traen nombre (al enviar sin elegir nada,
+        # llega un FileStorage vacío que no cuenta como intento).
+        archivos = [a for a in request.files.getlist("fotos") if a and a.filename]
+        subidas = 0
+        for archivo in archivos:
+            nombre = fotos.guardar(archivo)
+            if nombre:
+                foto.crear(con, incidencia_id, nombre)
+                subidas += 1
+        con.commit()
+    finally:
+        con.close()
+
+    # Las descartadas son las que se intentaron subir pero no pasaron la
+    # validación (tipo o tamaño). Avisamos según cómo haya ido.
+    descartadas = len(archivos) - subidas
+    if subidas:
+        mensaje = f"{subidas} foto(s) subida(s)."
+        if descartadas:
+            mensaje += f" {descartadas} descartada(s) por tipo o tamaño."
+        flash(mensaje, "exito")
+    elif descartadas:
+        flash(f"No se ha subido ninguna foto: {descartadas} descartada(s) por "
+              "tipo o tamaño (se admiten JPG, PNG o WEBP de hasta 5 MB).",
+              "error")
+    else:
+        flash("No has seleccionado ninguna foto.", "error")
+
+    return redirect(url_for("incidencias.resguardo", incidencia_id=incidencia_id))
+
+
+@bp_incidencias.route("/<int:incidencia_id>/fotos/<int:foto_id>/borrar",
+                      methods=["POST"])
+def borrar_foto(incidencia_id, foto_id):
+    """
+    Borra una foto: primero la fila de la base de datos y luego su archivo.
+    POST porque cambia datos. Después vuelve al resguardo (Post/Redirect/Get).
+    """
+    con = obtener_conexion()
+    try:
+        fila = foto.obtener_por_id(con, foto_id)
+        # Comprobamos que la foto existe y que es de ESTA ficha, para que el id
+        # de la URL no apunte a la foto de otra incidencia.
+        if fila is None or fila["incidencia_id"] != incidencia_id:
+            abort(404)
+        foto.borrar(con, foto_id)
+        con.commit()
+        # El archivo se borra después de confirmar el borrado en la base de
+        # datos. Si fallara el fichero, al menos la fila ya no estaría.
+        fotos.borrar_archivo(fila["nombre_archivo"])
+        flash("Foto borrada.", "exito")
+    finally:
+        con.close()
+
+    return redirect(url_for("incidencias.resguardo", incidencia_id=incidencia_id))
+
+
+@bp_incidencias.route("/<int:incidencia_id>/foto/<int:foto_id>")
+def ver_foto(incidencia_id, foto_id):
+    """
+    Sirve el archivo de una foto. Lo entrega send_from_directory, que garantiza
+    que el nombre no se salga de DIR_FOTOS (evita el path traversal): nunca
+    montamos la ruta del fichero a mano con datos que vengan de fuera.
+    """
+    con = obtener_conexion()
+    try:
+        fila = foto.obtener_por_id(con, foto_id)
+    finally:
+        con.close()
+
+    if fila is None or fila["incidencia_id"] != incidencia_id:
+        abort(404)
+    return send_from_directory(DIR_FOTOS, fila["nombre_archivo"])
 
 
 @bp_incidencias.route("/historial")

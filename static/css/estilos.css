@@ -211,6 +211,27 @@ a .tarjeta-accion:hover {
   margin-bottom: 0.2rem;
 }
 
+/* Galería de fotos de los daños: las miniaturas se colocan en fila y van
+   pasando a la siguiente línea (wrap) si no caben. */
+.galeria-fotos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+.foto-dano {
+  margin: 0;
+  text-align: center;
+}
+.foto-dano img {
+  max-height: 120px;
+  border: 1px solid #bbb;
+  border-radius: 3px;
+}
+.foto-dano .btn {
+  margin-top: 0.3rem;
+}
+
 /* Firmas: dos columnas con una línea encima del texto */
 .firmas {
   display: flex;

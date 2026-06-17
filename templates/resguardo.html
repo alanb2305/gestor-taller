@@ -116,6 +116,49 @@
       </ol>
     </section>
 
+    {# -------------------- Fotos de los daños -------------------- #}
+    {# Se gestionan desde aquí porque la ficha ya existe y tiene id. Las
+       miniaturas forman parte del documento (se imprimen); el formulario de
+       subida y los botones de borrar llevan la clase no-imprimir para que no
+       salgan en el papel. #}
+    <section class="hoja-bloque">
+      <h2>Fotos de los daños</h2>
+
+      {% if fotos %}
+        <div class="galeria-fotos">
+          {% for f in fotos %}
+            <figure class="foto-dano">
+              <img src="{{ url_for('incidencias.ver_foto', incidencia_id=datos.id, foto_id=f.id) }}"
+                   alt="Foto de los daños de la ficha {{ '%05d'|format(datos.id) }}">
+              <form class="no-imprimir" method="post"
+                    action="{{ url_for('incidencias.borrar_foto', incidencia_id=datos.id, foto_id=f.id) }}"
+                    onsubmit="return confirm('¿Borrar esta foto?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-trash"></i> Borrar
+                </button>
+              </form>
+            </figure>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted small no-imprimir mb-2">Todavía no hay fotos.</p>
+      {% endif %}
+
+      {# Subir fotos: solo en pantalla. La validación de tipo y tamaño está en
+         el servidor (servicios/fotos.py); el accept es solo una ayuda visual. #}
+      <form class="no-imprimir" method="post" enctype="multipart/form-data"
+            action="{{ url_for('incidencias.subir_fotos', incidencia_id=datos.id) }}">
+        <div class="input-group">
+          <input type="file" name="fotos" class="form-control"
+                 accept="image/*" multiple>
+          <button type="submit" class="btn btn-principal">
+            <i class="bi bi-upload"></i> Subir fotos
+          </button>
+        </div>
+        <div class="form-text">Se admiten JPG, PNG o WEBP de hasta 5 MB por foto.</div>
+      </form>
+    </section>
+
     {# -------------------- Piezas y firmas -------------------- #}
     <section class="hoja-bloque">
       <p class="mb-3">

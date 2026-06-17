@@ -124,6 +124,35 @@ def buscar(con, texto: str, limite: int = 50) -> list:
     ).fetchall()
 
 
+def entregas_pendientes(con) -> list:
+    """
+    Entregas que aún están pendientes, para la agenda.
+
+    Trae las fichas que NO se han entregado y que tienen fecha de entrega,
+    junto con su vehículo y su cliente (mismo JOIN que listar()). Dejamos fuera
+    a propósito dos casos: las ya 'entregado' (no hay nada que agendar) y las
+    que no tienen fecha_entrega (no se pueden situar en la agenda).
+
+    Ordenamos por fecha_entrega: como se guarda en ISO (AAAA-MM-DD), ordenar el
+    texto ordena igual que por fecha (de la más urgente a la más lejana).
+    """
+    return con.execute(
+        """SELECT i.id            AS id,
+                  i.fecha_entrada AS fecha_entrada,
+                  i.fecha_entrega AS fecha_entrega,
+                  i.estado        AS estado,
+                  v.matricula     AS matricula,
+                  v.marca_modelo  AS marca_modelo,
+                  c.nombre        AS nombre
+             FROM incidencias i
+             JOIN vehiculos    v ON v.id = i.vehiculo_id
+             JOIN clientes     c ON c.id = v.cliente_id
+            WHERE i.estado != 'entregado'
+              AND i.fecha_entrega IS NOT NULL
+            ORDER BY i.fecha_entrega"""
+    ).fetchall()
+
+
 def siguiente_estado(estado_actual: str):
     """
     Devuelve el estado que va justo después del actual en el ciclo de trabajo
