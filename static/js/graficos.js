@@ -1,10 +1,9 @@
 /* ===========================================================================
    Gráficas de la pantalla de inicio (Chart.js).
 
-   Pedimos los datos al servidor (/estadisticas) y dibujamos tres gráficas:
+   Pedimos los datos al servidor (/estadisticas) y dibujamos dos gráficas:
      - Fichas por estado  -> tarta (doughnut)
      - Fichas por mes     -> barras
-     - Clientes que más vuelven -> barras horizontales
 
    Igual que en el resto del proyecto, los datos los calcula el servidor; aquí
    solo los pintamos. Chart.js se carga desde un CDN en inicio.html.
@@ -39,7 +38,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   // etiquetas del historial, para que se reconozcan de un vistazo).
   const ACENTO = "#e07b00";
   const COLOR_ESTADO = {
-    "recibido":      "#6c757d",   // gris
+    "recepcionado":  "#6c757d",   // gris
     "en reparación": "#ffc107",   // amarillo
     "terminado":     "#0dcaf0",   // azul
     "entregado":     "#198754",   // verde
@@ -76,23 +75,6 @@ document.addEventListener("DOMContentLoaded", async function () {
       plugins: { legend: { display: false } },
       // precision: 0 evita decimales en el eje (las fichas se cuentan enteras).
       scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
-    },
-  });
-
-  // 3) Clientes que más vuelven: barras horizontales (indexAxis: 'y').
-  new Chart(document.getElementById("grafica-clientes"), {
-    type: "bar",
-    data: {
-      labels: datos.clientes.labels,
-      datasets: [{ label: "Fichas", data: datos.clientes.datos,
-                   backgroundColor: ACENTO }],
-    },
-    options: {
-      indexAxis: "y",
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
     },
   });
 

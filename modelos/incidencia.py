@@ -14,7 +14,7 @@ plantilla; aquí no convertimos nada.
 # Estados válidos, en el orden natural del trabajo. Es el mismo CHECK que
 # hay en el esquema; lo repetimos aquí para validar antes de tocar la base
 # de datos y poder dar un mensaje claro.
-ESTADOS = ("recibido", "en reparación", "terminado", "entregado")
+ESTADOS = ("recepcionado", "en reparación", "terminado", "entregado")
 
 
 def crear(con, datos: dict) -> int:
@@ -30,7 +30,7 @@ def crear(con, datos: dict) -> int:
             datos.get("fecha_entrega"),
             datos.get("kilometros"),
             datos.get("combustible"),
-            datos.get("estado", "recibido"),
+            datos.get("estado", "recepcionado"),
             datos.get("recoger_piezas", "No"),
         ),
     )
@@ -127,8 +127,8 @@ def buscar(con, texto: str, limite: int = 50) -> list:
 def siguiente_estado(estado_actual: str):
     """
     Devuelve el estado que va justo después del actual en el ciclo de trabajo
-    (recibido -> en reparación -> terminado -> entregado), o None si la ficha
-    ya está en el último estado ('entregado').
+    (recepcionado -> en reparación -> terminado -> entregado), o None si la
+    ficha ya está en el último estado ('entregado').
 
     Lo usa el botón de "avanzar estado" del historial: el orden es el de la
     tupla ESTADOS, así que el siguiente es simplemente el de la posición + 1.
@@ -186,25 +186,6 @@ def contar_por_mes(con) -> list:
             ORDER BY mes"""
     ).fetchall()
     return [(fila["mes"], fila["total"]) for fila in filas]
-
-
-def clientes_con_mas_visitas(con, limite: int = 5) -> list:
-    """
-    Clientes que más vuelven al taller (los que tienen más fichas).
-    Devuelve una lista de tuplas (nombre, nº de fichas), de más a menos.
-    Junta las tres tablas: una ficha es de un vehículo, que es de un cliente.
-    """
-    filas = con.execute(
-        """SELECT c.nombre AS nombre, COUNT(i.id) AS total
-             FROM clientes   c
-             JOIN vehiculos  v ON v.cliente_id  = c.id
-             JOIN incidencias i ON i.vehiculo_id = v.id
-            GROUP BY c.id
-            ORDER BY total DESC, c.nombre
-            LIMIT ?""",
-        (limite,),
-    ).fetchall()
-    return [(fila["nombre"], fila["total"]) for fila in filas]
 
 
 def contar_por_vehiculo(con, vehiculo_id: int) -> int:

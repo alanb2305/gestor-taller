@@ -39,7 +39,6 @@ def estadisticas():
     try:
         por_estado = incidencia.contar_por_estado(con)
         por_mes    = incidencia.contar_por_mes(con)
-        top        = incidencia.clientes_con_mas_visitas(con, limite=5)
     finally:
         con.close()
 
@@ -52,12 +51,7 @@ def estadisticas():
     etiquetas_mes = [f"{mes[5:7]}/{mes[0:4]}" for mes, _ in por_mes]
     datos_mes     = [total for _, total in por_mes]
 
-    # Clientes que más vuelven.
-    etiquetas_top = [nombre for nombre, _ in top]
-    datos_top     = [total for _, total in top]
-
     return jsonify({
         "por_estado": {"labels": list(incidencia.ESTADOS), "datos": datos_estado},
         "por_mes":    {"labels": etiquetas_mes,             "datos": datos_mes},
-        "clientes":   {"labels": etiquetas_top,             "datos": datos_top},
     })

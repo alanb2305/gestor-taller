@@ -76,7 +76,7 @@ EJEMPLOS = [
             {
                 "fecha_entrada": "2025-05-12", "fecha_entrega": None,
                 "kilometros": 64200, "combustible": "4/4",
-                "estado": "recibido", "recoger_piezas": "No",
+                "estado": "recepcionado", "recoger_piezas": "No",
                 "reparaciones": [
                     "Ruido en tren delantero, revisar rótulas y silentblocks",
                 ],

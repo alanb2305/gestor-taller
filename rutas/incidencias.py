@@ -202,7 +202,7 @@ def historial():
 def avanzar_estado(incidencia_id):
     """
     Pasa una ficha al siguiente estado de su ciclo de trabajo
-    (recibido -> en reparación -> terminado -> entregado).
+    (recepcionado -> en reparación -> terminado -> entregado).
 
     Es un POST porque cambia datos de la base de datos (con GET no se debe
     modificar nada). El estado destino lo decide el SERVIDOR a partir del
@@ -261,7 +261,7 @@ def _guardar_incidencia(con, datos):
         # (ya validado como dígitos) o dejamos None si viene vacío.
         "kilometros":     int(datos["kilometros"]) if datos["kilometros"] else None,
         "combustible":    datos["combustible"],
-        "estado":         "recibido",
+        "estado":         "recepcionado",
         "recoger_piezas": datos["recoger_piezas"],
     })
     reparacion.crear_varias(con, incidencia_id, datos["reparaciones"])

@@ -14,8 +14,6 @@
   </div>
 
   {# -------------------- Tarjetas de acceso -------------------- #}
-  {# "Clientes y vehículos" sigue como "Próximamente": es la gestión (alta y
-     edición) de clientes y coches, que desarrollamos en un bloque posterior. #}
   <div class="row g-4 justify-content-center">
 
     <div class="col-12 col-md-4">
@@ -98,17 +96,6 @@
       </div>
     </div>
 
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">Clientes que más vuelven</div>
-        <div class="card-body">
-          <div style="height: 260px">
-            <canvas id="grafica-clientes"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
   </div>
 
 {% endblock %}
@@ -116,6 +103,6 @@
 {% block scripts %}
   {# Chart.js desde CDN (no se instala con pip; es una librería de JavaScript). #}
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  {# Nuestro código: pide los datos a /estadisticas y dibuja las tres gráficas. #}
+  {# Nuestro código: pide los datos a /estadisticas y dibuja las gráficas. #}
   <script src="{{ url_for('static', filename='js/graficos.js') }}"></script>
 {% endblock %}

@@ -224,10 +224,10 @@ def importar_historial(con, archivo):
             vehiculo_id = vehiculo.crear(
                 con, datos["matricula"], datos["marca_modelo"], cliente_id)
 
-        # Estado: si en el CSV viene uno válido lo respetamos; si no, 'recibido'.
+        # Estado: si en el CSV viene uno válido lo respetamos; si no, 'recepcionado'.
         estado = _campo(fila, "estado")
         if estado not in incidencia.ESTADOS:
-            estado = "recibido"
+            estado = "recepcionado"
 
         inc_id = incidencia.crear(con, {
             "vehiculo_id":    vehiculo_id,
