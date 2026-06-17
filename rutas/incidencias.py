@@ -73,6 +73,11 @@ def nueva():
     con = obtener_conexion()
     try:
         incidencia_id = _guardar_incidencia(con, datos)
+        # Las fotos de los daños se adjuntan en el mismo formulario (multipart).
+        # Las guardo dentro de la misma transacción que la ficha: si algo falla,
+        # no se queda nada a medias.
+        subidas, descartadas = _guardar_fotos(
+            con, incidencia_id, request.files.getlist("fotos"))
         con.commit()
     except Exception:
         # Si algo falla a mitad, deshacemos para no dejar datos a medias.
@@ -85,7 +90,12 @@ def nueva():
 
     # Después de guardar redirijo al resguardo (en vez de devolver el HTML), así
     # si el usuario recarga la página no se guarda otra ficha repetida.
-    flash("Ficha guardada correctamente.", "exito")
+    mensaje = "Ficha guardada correctamente."
+    if subidas:
+        mensaje += f" {subidas} foto(s) de los daños añadida(s)."
+    if descartadas:
+        mensaje += f" {descartadas} descartada(s) por tipo o tamaño."
+    flash(mensaje, "exito")
     return redirect(url_for("incidencias.resguardo", incidencia_id=incidencia_id))
 
 
@@ -172,31 +182,21 @@ def descargar_pdf(incidencia_id):
 @bp_incidencias.route("/<int:incidencia_id>/fotos", methods=["POST"])
 def subir_fotos(incidencia_id):
     """
-    Sube una o varias fotos de los daños a una ficha. Cada archivo pasa por
-    servicios.fotos.guardar, que valida tipo y tamaño; solo guardo las que pasan.
-    Dejo un flash con el resumen y vuelvo al resguardo.
+    Añade más fotos de los daños a una ficha ya guardada (desde el resguardo).
+    Las fotos del estado del coche se suben al crear la ficha; esto es para
+    agregar alguna más después. Dejo un flash con el resumen y vuelvo al resguardo.
     """
     con = obtener_conexion()
     try:
         # La ficha tiene que existir para colgarle fotos.
         if incidencia.obtener_estado(con, incidencia_id) is None:
             abort(404)
-
-        # getlist recoge todos los ficheros del input (lleva 'multiple'). Me
-        # quedo con los que traen nombre (al enviar sin elegir nada llega vacío).
-        archivos = [a for a in request.files.getlist("fotos") if a and a.filename]
-        subidas = 0
-        for archivo in archivos:
-            nombre = fotos.guardar(archivo)
-            if nombre:
-                foto.crear(con, incidencia_id, nombre)
-                subidas += 1
+        subidas, descartadas = _guardar_fotos(
+            con, incidencia_id, request.files.getlist("fotos"))
         con.commit()
     finally:
         con.close()
 
-    # Las descartadas son las que no pasaron la validación (tipo o tamaño).
-    descartadas = len(archivos) - subidas
     if subidas:
         mensaje = f"{subidas} foto(s) subida(s)."
         if descartadas:
@@ -334,6 +334,25 @@ def _guardar_incidencia(con, datos):
     })
     reparacion.crear_varias(con, incidencia_id, datos["reparaciones"])
     return incidencia_id
+
+
+def _guardar_fotos(con, incidencia_id, archivos):
+    """
+    Guarda las fotos válidas de una ficha (las que pasan el control de tipo y
+    tamaño de servicios/fotos.py) y devuelve (subidas, descartadas) para el
+    aviso. No hace commit ni cierra la conexión: de eso se encarga quien llama.
+    La usan el alta de la ficha y el formulario de fotos del resguardo.
+    """
+    # getlist trae todos los ficheros del input (lleva 'multiple'); me quedo con
+    # los que traen nombre (al enviar sin elegir nada, llega un hueco vacío).
+    archivos = [a for a in archivos if a and a.filename]
+    subidas = 0
+    for archivo in archivos:
+        nombre = fotos.guardar(archivo)
+        if nombre:
+            foto.crear(con, incidencia_id, nombre)
+            subidas += 1
+    return subidas, len(archivos) - subidas
 
 
 def _datos_resguardo(con, incidencia_id):

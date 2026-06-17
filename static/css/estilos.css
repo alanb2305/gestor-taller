@@ -76,6 +76,21 @@ a .tarjeta-accion:hover {
   color: #9a9a9a;
 }
 
+/* Miniaturas de las fotos de los daños elegidas en el formulario, antes de
+   enviarlas. Se colocan en fila y bajan a la siguiente línea si no caben. */
+.previsualizacion-fotos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+.previsualizacion-fotos img {
+  height: 90px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
 
 /* ---------------------------------------------------------------------------
    2. EL RESGUARDO EN PANTALLA
