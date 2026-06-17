@@ -1,13 +1,9 @@
 """
 Gestión de clientes (CRUD: listar, crear, editar y borrar).
 
-Hasta ahora los clientes solo se creaban "de paso" al guardar una ficha; aquí
-se pueden gestionar directamente. Sigue el mismo patrón que las incidencias:
-GET muestra el formulario, POST valida en el servidor y guarda, y después se
-redirige (patrón Post/Redirect/Get).
-
-No se permite borrar un cliente que tenga vehículos: así no se pierde por error
-el historial de un coche. Habría que borrar antes sus coches (o reasignarlos).
+Mismo patrón que las incidencias: GET muestra el formulario, POST valida y
+guarda, y luego redirige. No se deja borrar un cliente con vehículos, para no
+perder por error el historial de un coche.
 """
 
 from flask import (Blueprint, render_template, request,
@@ -71,7 +67,7 @@ def editar(cliente_id):
             flash("Cliente actualizado.", "exito")
             return redirect(url_for("clientes.lista"))
         con.close()
-        datos["id"] = cliente_id   # para que el formulario sepa a dónde enviar
+        datos["id"] = cliente_id   # el formulario lo necesita para el action
         return render_template("cliente_form.html",
                                datos=datos, errores=errores, modo="editar")
 
@@ -83,8 +79,7 @@ def editar(cliente_id):
 @bp_clientes.route("/<int:cliente_id>/borrar", methods=["POST"])
 def borrar(cliente_id):
     """
-    Borra un cliente, pero solo si no tiene vehículos (POST porque cambia datos).
-    Si los tiene, no borra y avisa: primero hay que ocuparse de sus coches.
+    Borra un cliente, solo si no tiene vehículos. Si los tiene, no borra y avisa.
     """
     con = obtener_conexion()
     try:
@@ -105,7 +100,7 @@ def borrar(cliente_id):
 
 
 def _leer_formulario(form):
-    """Pasa el formulario a un diccionario, limpiando espacios y subiendo el CIF."""
+    """Pasa el formulario a un diccionario, limpiando espacios y subiendo el CIF a mayúsculas."""
     return {
         "nombre":    form.get("nombre", "").strip(),
         "cif":       form.get("cif", "").strip().upper(),

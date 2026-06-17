@@ -6,9 +6,8 @@
 
   <h1 class="h4 mb-4">Nueva ficha de depósito</h1>
 
-  {# novalidate desactiva la validación automática del navegador para que sea
-     la nuestra (JavaScript + servidor) la que controle los mensajes y no
-     salgan dos avisos distintos. El id lo usa validaciones.js. #}
+  {# novalidate desactiva la validación del navegador para que controle la
+     nuestra (JS + servidor) y no salgan dos avisos. El id lo usa validaciones.js. #}
   <form method="post" action="{{ url_for('incidencias.nueva') }}"
         id="form-incidencia" novalidate>
 
@@ -39,9 +38,8 @@
     </div>
 
     {# ==================== VEHÍCULO ==================== #}
-    {# Ponemos el vehículo ANTES que el cliente porque la matrícula es lo
-       primero que se mira al recibir el coche, y es la que dispara el
-       autorrelleno de los datos del cliente. #}
+    {# El vehículo va antes que el cliente: la matrícula es lo primero que se
+       mira al recibir el coche y la que dispara el autorrelleno. #}
     <div class="card mb-4">
       <div class="card-header">Datos del vehículo</div>
       <div class="card-body">
@@ -160,12 +158,9 @@
           botón «Añadir trabajo» para poner tantas líneas como necesites.
         </p>
 
-        {# Contenedor de las líneas de trabajo. Todas se llaman "reparacion":
-           en el servidor se recogen juntas con getlist() y las vacías se
-           descartan. Las filas las añade y las quita trabajos.js con los
-           botones + y la papelera. "datos.reparaciones or ['']" garantiza que,
-           aunque no venga ninguna (o falle el JavaScript), siempre se vea al
-           menos una línea para escribir. #}
+        {# Contenedor de las líneas de trabajo. Todas se llaman "reparacion" (el
+           servidor las recoge con getlist() y descarta las vacías). trabajos.js
+           añade y quita filas. "or ['']" asegura que siempre se vea una línea. #}
         <div id="lista-trabajos">
           {% for linea in datos.reparaciones or [''] %}
             <div class="input-group mb-2 fila-trabajo">
@@ -199,6 +194,14 @@
           </div>
         {% endfor %}
       </div>
+    </div>
+
+    {# Aviso: las fotos se añaden después, en el resguardo. La ficha tiene que
+       estar guardada (tener id) antes de poder colgarle fotos. #}
+    <div class="alert alert-info d-flex align-items-center gap-2" role="alert">
+      <i class="bi bi-info-circle"></i>
+      <span>Las fotos de los daños se añaden al generar el resguardo, desde la
+            propia ficha.</span>
     </div>
 
     {# ==================== BOTONES ==================== #}

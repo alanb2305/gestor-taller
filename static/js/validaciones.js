@@ -1,17 +1,11 @@
 /* ===========================================================================
    Validación del formulario en el navegador.
 
-   IMPORTANTE: esto es SOLO para avisar al usuario cuanto antes y que la
-   experiencia sea cómoda. La validación que de verdad cuenta está en el
-   servidor (servicios/validaciones.py), porque el navegador se puede saltar
-   (desactivando JavaScript, por ejemplo) y nunca hay que fiarse del cliente.
-
-   La idea de esta versión: avisar MIENTRAS se escribe, no solo al enviar.
-   Los campos con formato (teléfono, CP, kilómetros, matrícula y DNI/CIF) se
-   comprueban al salir del campo (blur) y, si ya están marcados en rojo, en
-   cada tecla, para que el aviso desaparezca en cuanto se corrige. Los campos
-   obligatorios vacíos se avisan al pulsar "Generar resguardo": así no se marca
-   en rojo un campo que todavía no se ha tenido tiempo de rellenar.
+   Esto es solo para avisar al usuario cuanto antes; la validación que cuenta
+   está en el servidor (el navegador se puede saltar). La idea es avisar mientras
+   se escribe: los campos con formato (teléfono, CP, km, matrícula y DNI/CIF) se
+   comprueban al salir del campo y, si ya están en rojo, en cada tecla, para que
+   el aviso desaparezca al corregir. Los obligatorios vacíos se avisan al enviar.
    =========================================================================== */
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -22,8 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const entrada = document.getElementById("fecha_entrada");
   const entrega = document.getElementById("fecha_entrega");
 
-  // Letras de control del DNI/NIE: las mismas que usa el servidor. La posición
-  // sale del resto de dividir el número entre 23.
+  // Letras de control del DNI/NIE (las mismas que el servidor).
   const LETRAS_DNI = "TRWAGMYFPDXBNJZSQVHLCKE";
 
   // Expresiones regulares: las mismas reglas que el servidor.
@@ -69,11 +62,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // Campos con regla de formato: son los que validamos en vivo (blur + input).
   const CAMPOS_FORMATO = ["telefono", "cp", "kilometros", "matricula", "cif"];
 
-  // -------------------------------------------------------------------------
-  // Mayúsculas automáticas mientras se escribe en DNI/CIF y matrícula.
-  // (La clase text-uppercase de Bootstrap solo lo MUESTRA en mayúsculas; el
-  //  valor que se envía hay que cambiarlo a mano, que es esto.)
-  // -------------------------------------------------------------------------
+  // Mayúsculas automáticas en DNI/CIF y matrícula. (text-uppercase de Bootstrap
+  // solo lo MUESTRA en mayúsculas; el valor que se envía hay que cambiarlo aquí.)
   ["cif", "matricula"].forEach(function (id) {
     const campo = document.getElementById(id);
     if (campo) {
@@ -83,10 +73,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // -------------------------------------------------------------------------
-  // La entrega no puede ser anterior a la entrada: le ponemos al calendario
-  // de "entrega" un mínimo igual a la fecha de entrada.
-  // -------------------------------------------------------------------------
+  // La entrega no puede ser anterior a la entrada: pongo al calendario de
+  // "entrega" un mínimo igual a la fecha de entrada.
   function ajustarMinimoEntrega() {
     if (entrada && entrega && entrada.value) {
       entrega.min = entrada.value;
@@ -94,11 +82,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   ajustarMinimoEntrega();
 
-  // -------------------------------------------------------------------------
-  // Validación del DNI/NIE/CIF (mismo algoritmo que validar_documento del
-  // servidor). El CIF se comprueba solo de formato; su dígito de control lo
-  // valida a fondo el servidor.
-  // -------------------------------------------------------------------------
+  // Validación del DNI/NIE/CIF (mismo algoritmo que el servidor). El CIF solo
+  // se comprueba de formato.
   function documentoValido(texto) {
     if (texto === "") return true;   // campo opcional
     const t = texto.toUpperCase().replace(/[-\s]/g, "");
@@ -125,12 +110,9 @@ document.addEventListener("DOMContentLoaded", function () {
     return nueva.test(t) || antigua.test(t);
   }
 
-  // -------------------------------------------------------------------------
-  // Localiza el <div class="invalid-feedback"> de un campo, donde va el
-  // mensaje de error. Lo buscamos entre los hermanos siguientes (saltando
-  // otros avisos que pueda haber en medio, como el del autorrelleno) y, si no,
-  // dentro del contenedor del campo. Así el mensaje sale siempre en su sitio.
-  // -------------------------------------------------------------------------
+  // Localiza el <div class="invalid-feedback"> de un campo (donde va el mensaje).
+  // Lo busco entre los hermanos siguientes (saltando otros avisos, como el del
+  // autorrelleno) y, si no, dentro del contenedor del campo.
   function feedbackDe(campo) {
     let el = campo.nextElementSibling;
     while (el && !el.classList.contains("invalid-feedback")) {
@@ -153,12 +135,9 @@ document.addEventListener("DOMContentLoaded", function () {
     campo.classList.remove("is-invalid");
   }
 
-  // -------------------------------------------------------------------------
-  // Valida un campo y pinta o limpia su estado. Con obligatorio=true mira
-  // también si es un campo obligatorio vacío; en vivo (mientras se escribe)
-  // lo llamamos con obligatorio=false para no marcar en rojo un campo que aún
-  // no se ha rellenado. Devuelve true si el campo es válido.
-  // -------------------------------------------------------------------------
+  // Valida un campo y pinta o limpia su estado. Con obligatorio=true mira también
+  // si está vacío; en vivo lo llamo con obligatorio=false para no marcar en rojo
+  // un campo que aún no se ha rellenado. Devuelve true si es válido.
   function validarCampo(id, obligatorio) {
     const campo = document.getElementById(id);
     if (!campo) return true;
@@ -177,9 +156,8 @@ document.addEventListener("DOMContentLoaded", function () {
     return true;
   }
 
-  // La entrega tiene dos comprobaciones: obligatoria/vacía y coherencia con la
-  // entrada (no puede ser anterior). Las fechas en ISO (AAAA-MM-DD) se pueden
-  // comparar como texto, porque ese formato ordena igual que por fecha.
+  // La entrega tiene dos comprobaciones: que no esté vacía y que no sea anterior
+  // a la entrada. Las fechas en ISO se comparan como texto (ordenan igual).
   function validarEntrega(obligatorio) {
     if (!entrega) return true;
     const valor = entrega.value.trim();
@@ -196,11 +174,8 @@ document.addEventListener("DOMContentLoaded", function () {
     return true;
   }
 
-  // -------------------------------------------------------------------------
-  // Validación EN VIVO de los campos de formato: al salir del campo (blur) y,
-  // si ya está marcado en rojo, en cada tecla (input) para que el aviso
-  // desaparezca en cuanto se corrige.
-  // -------------------------------------------------------------------------
+  // Validación en vivo de los campos de formato: al salir del campo (blur) y, si
+  // ya está en rojo, en cada tecla (input).
   CAMPOS_FORMATO.forEach(function (id) {
     const campo = document.getElementById(id);
     if (!campo) return;
@@ -227,10 +202,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // -------------------------------------------------------------------------
-  // Al enviar: comprobamos TODO (obligatorios + formato + coherencia). Si algo
-  // falla, paramos el envío y llevamos al usuario al primer campo con error.
-  // -------------------------------------------------------------------------
+  // Al enviar: compruebo todo (obligatorios + formato + coherencia). Si algo
+  // falla, paro el envío y llevo al usuario al primer campo con error.
   formulario.addEventListener("submit", function (evento) {
     let primerError = null;
 

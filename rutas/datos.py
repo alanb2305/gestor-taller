@@ -1,11 +1,8 @@
 """
-Rutas de importar / exportar datos en CSV.
-
-Reúne en un blueprint propio la descarga y la subida de los CSV de clientes,
-vehículos e historial, para poder llevar los datos a Excel y volver a traerlos.
-La lógica de leer y escribir el CSV está en servicios/csv_datos.py; aquí solo
-abrimos la conexión, llamamos al servicio y, en las importaciones, confirmamos
-o deshacemos la transacción y dejamos un mensaje con el resumen.
+Rutas de importar / exportar datos en CSV (clientes, vehículos e historial),
+para llevar los datos a Excel y volver a traerlos. La lógica de leer y escribir
+el CSV está en servicios/csv_datos.py; aquí abro la conexión, llamo al servicio
+y, al importar, confirmo o deshago la transacción y dejo un mensaje.
 """
 
 from flask import (Blueprint, render_template, request, redirect,
@@ -62,7 +59,7 @@ def _procesar_importacion(funcion, archivo, nombre):
     """
     Parte común de las tres importaciones: abre la conexión, llama a la función
     de importación, confirma (o deshace si hay error) y deja un mensaje con el
-    resumen. Después vuelve al panel (patrón Post/Redirect/Get).
+    resumen. Después vuelve al panel.
     """
     con = obtener_conexion()
     try:

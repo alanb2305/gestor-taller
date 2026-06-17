@@ -58,9 +58,9 @@
   {# -------------------- Contenido de cada página -------------------- #}
   <main class="container my-4">
 
-    {# Mensajes flash (avisos de "guardado", errores...). get_flashed_messages
-       los recoge una sola vez: aparecen tras una acción y desaparecen al
-       recargar. Van con la clase no-imprimir para que no salgan en el papel. #}
+    {# Mensajes flash (avisos de "guardado", errores...): aparecen tras una
+       acción y desaparecen al recargar. Con no-imprimir para que no salgan en
+       el papel. #}
     <div class="no-imprimir">
       {% with mensajes = get_flashed_messages(with_categories=true) %}
         {% for categoria, texto in mensajes %}

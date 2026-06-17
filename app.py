@@ -1,7 +1,6 @@
 """
-Punto de entrada de la aplicación.
-Crea la app de Flask, deja preparada la base de datos y registra las rutas,
-que tenemos repartidas en la carpeta 'rutas' para no juntarlo todo aquí.
+Punto de entrada de la app: crea la app de Flask, prepara la base de datos
+y registra las rutas (que están repartidas en la carpeta 'rutas').
 """
 
 from flask import Flask
@@ -18,41 +17,26 @@ from rutas.vehiculos import bp_vehiculos
 
 app = Flask(__name__)
 
-# Clave para los mensajes flash y, más adelante, para las sesiones.
+# Clave que usa Flask para los mensajes flash (y las sesiones).
 app.secret_key = CLAVE_SECRETA
 
-# Al arrancar dejamos creado el fichero de la base de datos y las tablas
-# si aún no existen. El acceso a datos (dar de alta, consultar...) lo
-# desarrollamos en el siguiente bloque; de momento solo lo dejamos listo.
+# Creamos la base de datos y las tablas si todavía no existen.
 inicializar_bd()
 
 
-# ---------------------------------------------------------------------------
-# Context processor: una función que mete variables en TODAS las plantillas
-# sin tener que pasarlas a mano en cada render_template(). Así, en cualquier
-# HTML podemos usar {{ taller.nombre }} o {{ app_nombre }}.
-# Lo usamos para que la cabecera y el resguardo cojan los datos del taller
-# desde config.py: la app es genérica y su identidad vive solo en config.
-# ---------------------------------------------------------------------------
+# Con el context processor, los datos del taller están disponibles en todas
+# las plantillas sin pasarlos en cada render_template (p. ej. {{ taller.nombre }}).
 @app.context_processor
 def inyectar_datos_comunes():
     return {"taller": TALLER, "app_nombre": NOMBRE_APP}
 
 
-# ---------------------------------------------------------------------------
-# Filtro de plantilla para mostrar las fechas a la española (dd/mm/aaaa).
-# En la base de datos y en los <input type="date"> las fechas van en formato
-# ISO (AAAA-MM-DD); en el resguardo las queremos en dd/mm/aaaa. La conversión
-# vive en servicios/formato.py (la usa también el PDF, así no se repite); aquí
-# solo la registramos como filtro para poder escribir en el HTML:
-#     {{ fecha | fecha_es }}
-# ---------------------------------------------------------------------------
+# Filtro para mostrar las fechas como dd/mm/aaaa en el HTML: {{ fecha | fecha_es }}
+# (en la base de datos se guardan en formato ISO, AAAA-MM-DD).
 app.add_template_filter(fecha_es, "fecha_es")
 
 
-# Registramos los blueprints: cada uno agrupa las rutas de una parte de la
-# app. Hoy tenemos la pantalla de inicio y la de incidencias; al crecer el
-# proyecto añadiremos las de clientes, vehículos, etc.
+# Cada blueprint agrupa las rutas de una parte de la app.
 app.register_blueprint(bp_principal)
 app.register_blueprint(bp_incidencias)
 app.register_blueprint(bp_agenda)

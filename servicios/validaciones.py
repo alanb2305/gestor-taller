@@ -1,22 +1,16 @@
 """
-Validaciones de los datos del formulario.
-
-Las reunimos en un único sitio (este servicio) para reutilizarlas y para
-tener "una sola verdad": las mismas reglas valen para el alta de hoy y para
-cuando guardemos en la base de datos.
-
-Importante: estas son las validaciones del SERVIDOR. Hay otras parecidas en
-JavaScript (static/js/validaciones.js) que avisan al usuario mientras escribe,
-pero esas son solo comodidad. El navegador se puede saltar, así que la
-comprobación seria se hace siempre aquí.
+Validaciones de los datos del formulario, reunidas en un sitio para no
+repetirlas. Estas son las del SERVIDOR, que son las que cuentan: las de
+static/js/validaciones.js solo avisan al usuario mientras escribe, pero el
+navegador se puede saltar, así que la comprobación de verdad se hace aquí.
 """
 
 import re
 from datetime import date
 
 
-# Letras de control del DNI/NIE. La posición se calcula con el resto de
-# dividir el número entre 23 (es el algoritmo oficial).
+# Letras de control del DNI/NIE. La posición sale del resto de dividir el
+# número entre 23 (es el algoritmo oficial).
 _LETRAS_DNI = "TRWAGMYFPDXBNJZSQVHLCKE"
 
 
@@ -26,11 +20,9 @@ _LETRAS_DNI = "TRWAGMYFPDXBNJZSQVHLCKE"
 
 def normalizar_matricula(texto):
     """
-    Deja una matrícula en forma canónica: en mayúsculas y sin guiones ni
-    espacios, para que '1234-bcd' o '1234 BCD' se traten como la misma.
-    La usan el formulario, la gestión de vehículos, el autorrelleno y la
-    importación de CSV; así la normalización está en un único sitio y no
-    repetida por todo el código.
+    Deja la matrícula en mayúsculas y sin guiones ni espacios, para que
+    '1234-bcd' o '1234 BCD' se traten como la misma. La uso en el formulario,
+    la gestión de vehículos, el autorrelleno y el CSV (así está en un solo sitio).
     """
     return (texto or "").upper().replace("-", "").replace(" ", "")
 
@@ -97,13 +89,12 @@ def validar_kilometros(texto):
 
 def validar_documento(texto):
     """
-    El campo admite tres cosas distintas, así que probamos por orden:
-      - DNI -> validamos la letra de control.
+    El campo admite DNI, NIE o CIF, así que pruebo por orden:
+      - DNI -> compruebo la letra de control.
       - NIE -> igual, pero la primera letra (X/Y/Z) cuenta como 0/1/2.
-      - CIF -> validamos solo el formato. El dígito de control del CIF tiene
-               varias reglas según el tipo de empresa, así que la comprobación
-               completa la dejamos como mejora futura.
-    Si está vacío lo damos por bueno (es un campo opcional).
+      - CIF -> solo el formato (su dígito de control tiene varias reglas; lo
+               dejo como mejora futura).
+    Si está vacío lo doy por bueno (es opcional).
     """
     if not texto:
         return True
@@ -131,10 +122,8 @@ def _letra_nie_correcta(nie):
 
 
 # ---------------------------------------------------------------------------
-# Validación del formulario completo.
-# Recibe el diccionario de datos y devuelve otro con los errores:
-#     { "nombre_del_campo": "mensaje para el usuario", ... }
-# Si el diccionario que devuelve está vacío, es que no hay errores.
+# Validación del formulario completo. Recibe el diccionario de datos y devuelve
+# otro {campo: mensaje} con los errores. Si vuelve vacío, no hay errores.
 # ---------------------------------------------------------------------------
 
 # Campos obligatorios y el mensaje que se enseña si faltan.
@@ -161,7 +150,7 @@ def validar_incidencia(datos):
     if datos.get("fecha_entrega") and not validar_fecha(datos["fecha_entrega"]):
         errores["fecha_entrega"] = "La fecha de entrega no es válida."
 
-    # 3) Coherencia entre fechas (solo si las dos son válidas y no hay ya error).
+    # 3) Coherencia entre fechas (si las dos valen y no hay ya error).
     if ("fecha_entrada" not in errores and "fecha_entrega" not in errores
             and datos.get("fecha_entrada") and datos.get("fecha_entrega")):
         if not fecha_entrega_coherente(datos["fecha_entrada"], datos["fecha_entrega"]):
@@ -183,9 +172,8 @@ def validar_incidencia(datos):
 
 
 # ---------------------------------------------------------------------------
-# Validación de cliente y de vehículo por separado (para la pantalla de
-# gestión: alta y edición). Mismas reglas de formato que la ficha; devuelven
-# un diccionario {campo: mensaje}, igual que validar_incidencia().
+# Validación de cliente y de vehículo por separado (para la pantalla de gestión).
+# Mismas reglas que la ficha; devuelven {campo: mensaje} igual que arriba.
 # ---------------------------------------------------------------------------
 
 def validar_cliente(datos):
@@ -202,8 +190,8 @@ def validar_cliente(datos):
 
 
 def validar_vehiculo(datos):
-    # Solo el formato. Que la matrícula no esté repetida y que el cliente
-    # exista se comprueban en la ruta, porque dependen de la base de datos.
+    # Solo el formato. Que la matrícula no esté repetida y que el cliente exista
+    # se comprueban en la ruta (dependen de la base de datos).
     errores = {}
     if not datos.get("matricula", "").strip():
         errores["matricula"] = "La matrícula es obligatoria."

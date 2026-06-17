@@ -1,15 +1,11 @@
 """
-Rutas de las incidencias (las órdenes de trabajo / resguardos de depósito).
+Rutas de las incidencias (las órdenes de trabajo / resguardos de depósito):
+el alta de una ficha, el guardado, la vista del resguardo, sus fotos, el
+historial y el endpoint que usa el autorrelleno.
 
-Aquí está el alta de una ficha (el formulario), el guardado en la base de
-datos, la vista del resguardo ya relleno, el historial de fichas y el
-pequeño endpoint que usa el autorrelleno para traer los datos de una
-matrícula ya conocida.
-
-Al guardar seguimos el orden "comprobar primero, escribir después": primero
-validamos en el servidor y, solo si todo está bien, abrimos la conexión y
-escribimos. Todo el guardado va dentro de una única transacción: o se graba
-el cliente, el vehículo, la incidencia y sus reparaciones, o no se graba nada.
+Al guardar valido primero en el servidor y solo escribo si todo está bien. El
+guardado va en una única transacción: o se graba todo (cliente, vehículo,
+incidencia y reparaciones) o no se graba nada.
 """
 
 from datetime import date, timedelta
@@ -31,14 +27,12 @@ bp_incidencias = Blueprint("incidencias", __name__, url_prefix="/incidencias")
 
 def _valores_por_defecto():
     """
-    Valores con los que aparece el formulario al abrirlo: la fecha de hoy
-    como entrada y tres días después como entrega prevista, igual que hacía
-    el programa de escritorio original.
+    Valores con los que se abre el formulario: hoy como fecha de entrada y tres
+    días después como entrega prevista (igual que el programa de escritorio).
     """
     hoy = date.today()
     return {
-        # isoformat() devuelve AAAA-MM-DD, que es justo lo que entiende
-        # el <input type="date"> del navegador.
+        # isoformat() da AAAA-MM-DD, que es lo que entiende el <input type="date">.
         "fecha_entrada":  hoy.isoformat(),
         "fecha_entrega":  (hoy + timedelta(days=3)).isoformat(),
         "nombre":         "",
@@ -53,8 +47,7 @@ def _valores_por_defecto():
         "kilometros":     "",
         "combustible":    "1/2",
         "recoger_piezas": "No",
-        # Una sola línea al empezar; el usuario añade más con el botón "+"
-        # (lo gestiona static/js/trabajos.js).
+        # Una línea al empezar; el usuario añade más con el botón "+" (trabajos.js).
         "reparaciones":   [""],
     }
 
@@ -66,19 +59,17 @@ def nueva():
         return render_template("incidencia_form.html",
                                datos=_valores_por_defecto(), errores={})
 
-    # POST: recogemos lo escrito y lo validamos en el servidor (esta es la
-    # validación que cuenta; la del navegador solo avisa antes de enviar).
+    # POST: recogemos lo escrito y lo validamos en el servidor.
     datos = _leer_formulario(request.form)
     errores = validar_incidencia(datos)
     if errores:
-        # Volvemos al formulario conservando lo escrito y los mensajes de error.
+        # Volvemos al formulario conservando lo escrito y los errores.
         return render_template("incidencia_form.html",
                                datos=datos, errores=errores)
 
-    # Nos quedamos solo con las líneas de reparación que llevan texto.
+    # Nos quedamos solo con las líneas de reparación que tienen texto.
     datos["reparaciones"] = [linea for linea in datos["reparaciones"] if linea]
 
-    # Guardado dentro de una transacción.
     con = obtener_conexion()
     try:
         incidencia_id = _guardar_incidencia(con, datos)
@@ -92,9 +83,8 @@ def nueva():
     finally:
         con.close()
 
-    # Patrón Post/Redirect/Get: después de guardar redirigimos a la vista del
-    # resguardo en vez de devolver el HTML directamente. Así, si el usuario
-    # recarga la página, NO se vuelve a guardar otra ficha repetida.
+    # Después de guardar redirijo al resguardo (en vez de devolver el HTML), así
+    # si el usuario recarga la página no se guarda otra ficha repetida.
     flash("Ficha guardada correctamente.", "exito")
     return redirect(url_for("incidencias.resguardo", incidencia_id=incidencia_id))
 
@@ -102,18 +92,13 @@ def nueva():
 @bp_incidencias.route("/matricula/<matricula>")
 def buscar_matricula(matricula):
     """
-    Endpoint del autorrelleno (lo llama static/js/autorrelleno.js).
-
-    Devuelve en JSON los datos del cliente y del vehículo de una matrícula
-    que ya está registrada, para que el formulario los rellene solo. Si la
-    matrícula es nueva, responde {"encontrado": false} y el formulario se
-    deja como está.
-
-    No devolvemos los ids internos de la base de datos: al navegador solo le
-    hacen falta los campos que tiene que rellenar.
+    Endpoint del autorrelleno (lo llama static/js/autorrelleno.js): devuelve en
+    JSON los datos del cliente y del vehículo de una matrícula ya registrada. Si
+    la matrícula es nueva responde {"encontrado": false}. No devuelvo los ids
+    internos: al navegador solo le hacen falta los campos a rellenar.
     """
-    # Normalizamos igual que al guardar (mayúsculas, sin guiones ni espacios)
-    # para que "1234-bcd" y "1234 BCD" encuentren la misma matrícula.
+    # Normalizo igual que al guardar para que "1234-bcd" y "1234 BCD" encuentren
+    # la misma matrícula.
     matricula = normalizar_matricula(matricula)
 
     con = obtener_conexion()
@@ -144,10 +129,8 @@ def resguardo(incidencia_id):
     con = obtener_conexion()
     try:
         datos = _datos_resguardo(con, incidencia_id)
-        # Las fotos de los daños se gestionan desde el resguardo (aquí la ficha
-        # ya existe y tiene id). Las cargamos dentro de la misma conexión, solo
-        # si la ficha existe; el PDF no las usa, por eso van aparte y no en
-        # _datos_resguardo.
+        # Las fotos se gestionan desde el resguardo (aquí la ficha ya tiene id).
+        # El PDF no las usa, por eso las cargo aparte y solo si la ficha existe.
         fotos_ficha = (foto.listar_por_incidencia(con, incidencia_id)
                        if datos is not None else [])
     finally:
@@ -161,14 +144,9 @@ def resguardo(incidencia_id):
 @bp_incidencias.route("/<int:incidencia_id>/pdf")
 def descargar_pdf(incidencia_id):
     """
-    Genera el resguardo en PDF y lo descarga como archivo.
-
-    Usa exactamente los mismos datos que la vista en pantalla (misma
-    incidencia, mismo cliente y vehículo). El PDF se crea en memoria con
-    reportlab y se envía como descarga; no se guarda ningún fichero en el
-    servidor. El botón "Imprimir" de la pantalla sigue valiendo para imprimir
-    o "guardar como PDF" desde el propio navegador; esto es la otra opción:
-    bajarse el archivo directamente.
+    Genera el resguardo en PDF y lo descarga. Usa los mismos datos que la vista
+    en pantalla. El PDF se crea en memoria con reportlab (no se guarda ningún
+    fichero en el servidor). Es la alternativa al botón "Imprimir" del navegador.
     """
     con = obtener_conexion()
     try:
@@ -186,31 +164,26 @@ def descargar_pdf(incidencia_id):
 
 
 # ---------------------------------------------------------------------------
-# Fotos de los daños de una ficha. Se gestionan desde el resguardo: subir,
-# borrar y servir cada imagen. La validación de tipo y tamaño la hace el
-# servicio servicios/fotos.py (en el servidor), y la imagen se sirve siempre
+# Fotos de los daños de una ficha (subir, borrar y servir cada imagen). La
+# validación de tipo y tamaño la hace servicios/fotos.py, y la imagen se sirve
 # con send_from_directory para no construir rutas a mano (evita path traversal).
 # ---------------------------------------------------------------------------
 
 @bp_incidencias.route("/<int:incidencia_id>/fotos", methods=["POST"])
 def subir_fotos(incidencia_id):
     """
-    Sube una o varias fotos de los daños a una ficha.
-
-    Cada archivo pasa por servicios.fotos.guardar, que valida tipo y tamaño y
-    devuelve None si no vale; solo guardamos en la base de datos las que se
-    graben. Dejamos un flash con el resumen (subidas / descartadas) y volvemos
-    al resguardo (patrón Post/Redirect/Get).
+    Sube una o varias fotos de los daños a una ficha. Cada archivo pasa por
+    servicios.fotos.guardar, que valida tipo y tamaño; solo guardo las que pasan.
+    Dejo un flash con el resumen y vuelvo al resguardo.
     """
     con = obtener_conexion()
     try:
-        # La ficha tiene que existir: si no, no tiene sentido colgarle fotos.
+        # La ficha tiene que existir para colgarle fotos.
         if incidencia.obtener_estado(con, incidencia_id) is None:
             abort(404)
 
-        # getlist recoge todos los ficheros del input (que lleva 'multiple').
-        # Nos quedamos con los que traen nombre (al enviar sin elegir nada,
-        # llega un FileStorage vacío que no cuenta como intento).
+        # getlist recoge todos los ficheros del input (lleva 'multiple'). Me
+        # quedo con los que traen nombre (al enviar sin elegir nada llega vacío).
         archivos = [a for a in request.files.getlist("fotos") if a and a.filename]
         subidas = 0
         for archivo in archivos:
@@ -222,8 +195,7 @@ def subir_fotos(incidencia_id):
     finally:
         con.close()
 
-    # Las descartadas son las que se intentaron subir pero no pasaron la
-    # validación (tipo o tamaño). Avisamos según cómo haya ido.
+    # Las descartadas son las que no pasaron la validación (tipo o tamaño).
     descartadas = len(archivos) - subidas
     if subidas:
         mensaje = f"{subidas} foto(s) subida(s)."
@@ -245,19 +217,18 @@ def subir_fotos(incidencia_id):
 def borrar_foto(incidencia_id, foto_id):
     """
     Borra una foto: primero la fila de la base de datos y luego su archivo.
-    POST porque cambia datos. Después vuelve al resguardo (Post/Redirect/Get).
+    Es POST porque cambia datos. Después vuelve al resguardo.
     """
     con = obtener_conexion()
     try:
         fila = foto.obtener_por_id(con, foto_id)
-        # Comprobamos que la foto existe y que es de ESTA ficha, para que el id
-        # de la URL no apunte a la foto de otra incidencia.
+        # Compruebo que la foto existe y que es de ESTA ficha (para que el id de
+        # la URL no apunte a la foto de otra incidencia).
         if fila is None or fila["incidencia_id"] != incidencia_id:
             abort(404)
         foto.borrar(con, foto_id)
         con.commit()
-        # El archivo se borra después de confirmar el borrado en la base de
-        # datos. Si fallara el fichero, al menos la fila ya no estaría.
+        # Borro el fichero después de confirmar el borrado en la base de datos.
         fotos.borrar_archivo(fila["nombre_archivo"])
         flash("Foto borrada.", "exito")
     finally:
@@ -269,9 +240,8 @@ def borrar_foto(incidencia_id, foto_id):
 @bp_incidencias.route("/<int:incidencia_id>/foto/<int:foto_id>")
 def ver_foto(incidencia_id, foto_id):
     """
-    Sirve el archivo de una foto. Lo entrega send_from_directory, que garantiza
-    que el nombre no se salga de DIR_FOTOS (evita el path traversal): nunca
-    montamos la ruta del fichero a mano con datos que vengan de fuera.
+    Sirve el archivo de una foto con send_from_directory, que garantiza que el
+    nombre no se salga de DIR_FOTOS (evita path traversal).
     """
     con = obtener_conexion()
     try:
@@ -309,13 +279,9 @@ def historial():
 @bp_incidencias.route("/<int:incidencia_id>/estado", methods=["POST"])
 def avanzar_estado(incidencia_id):
     """
-    Pasa una ficha al siguiente estado de su ciclo de trabajo
-    (recepcionado -> en reparación -> terminado -> entregado).
-
-    Es un POST porque cambia datos de la base de datos (con GET no se debe
-    modificar nada). El estado destino lo decide el SERVIDOR a partir del
-    estado actual: el navegador solo puede pedir "avanzar", no elegir a qué
-    estado salta. Después volvemos al historial (patrón Post/Redirect/Get).
+    Pasa una ficha al siguiente estado (recepcionado -> en reparación ->
+    terminado -> entregado). Es POST porque cambia datos. El estado destino lo
+    decide el servidor a partir del actual: el navegador solo pide "avanzar".
     """
     con = obtener_conexion()
     try:
@@ -329,8 +295,7 @@ def avanzar_estado(incidencia_id):
             con.commit()
             flash(f"Ficha n.º {incidencia_id:05d} marcada como «{siguiente}».",
                   "exito")
-        # Si ya estaba en el último estado, no hacemos nada: el botón no se
-        # muestra en ese caso y aquí solo se llegaría manipulando la URL.
+        # Si ya estaba en el último estado no hacemos nada (el botón ni se muestra).
     finally:
         con.close()
 
@@ -339,21 +304,16 @@ def avanzar_estado(incidencia_id):
 
 def _guardar_incidencia(con, datos):
     """
-    Graba una ficha completa y devuelve el id de la incidencia creada.
-
-    La matrícula identifica al coche (es UNIQUE en la tabla):
-      - Si ya existe, reutilizamos ese vehículo y su cliente, y de paso
-        ponemos al día sus datos con lo que se haya escrito en el formulario.
-        Así, con el autorrelleno, se puede corregir un teléfono o un
-        domicilio antiguo y queda guardado lo último.
-      - Si no existe, creamos cliente nuevo y vehículo nuevo.
-    Después va la incidencia y sus reparaciones.
+    Graba una ficha completa y devuelve el id de la incidencia. La matrícula
+    identifica al coche (es UNIQUE): si ya existe, reutilizo ese vehículo y su
+    cliente y pongo al día sus datos; si no, creo cliente y vehículo nuevos.
+    Al final van la incidencia y sus reparaciones.
     """
     veh = vehiculo.obtener_por_matricula(con, datos["matricula"])
     if veh:
         vehiculo_id = veh["id"]
-        # La matrícula ya estaba: actualizamos los datos del cliente y la
-        # marca/modelo por si se han corregido al rellenar la ficha.
+        # La matrícula ya estaba: actualizo los datos del cliente y la marca/modelo
+        # por si se han corregido al rellenar la ficha.
         cliente.actualizar(con, veh["cliente_id"], datos)
         vehiculo.actualizar_marca_modelo(con, vehiculo_id, datos["marca_modelo"])
     else:
@@ -365,8 +325,8 @@ def _guardar_incidencia(con, datos):
         "vehiculo_id":    vehiculo_id,
         "fecha_entrada":  datos["fecha_entrada"],
         "fecha_entrega":  datos["fecha_entrega"] or None,
-        # En la BD los kilómetros son un número entero; convertimos el texto
-        # (ya validado como dígitos) o dejamos None si viene vacío.
+        # Los kilómetros son enteros en la BD: convierto el texto (ya validado)
+        # o dejo None si viene vacío.
         "kilometros":     int(datos["kilometros"]) if datos["kilometros"] else None,
         "combustible":    datos["combustible"],
         "estado":         "recepcionado",
@@ -378,12 +338,9 @@ def _guardar_incidencia(con, datos):
 
 def _datos_resguardo(con, incidencia_id):
     """
-    Carga una incidencia completa (con su cliente y su vehículo) más sus
-    líneas de reparación, y lo devuelve como un diccionario listo para la
-    plantilla y para el PDF. Devuelve None si la ficha no existe.
-
-    Lo usan la vista del resguardo y la descarga en PDF, así no repetimos en
-    los dos sitios el mismo trabajo de juntar la incidencia con sus líneas.
+    Carga una incidencia completa (cliente, vehículo y reparaciones) en un
+    diccionario listo para la plantilla y el PDF, o None si no existe. Lo usan
+    la vista del resguardo y la descarga en PDF, para no repetir el trabajo.
     """
     fila = incidencia.obtener_completa(con, incidencia_id)
     if fila is None:
@@ -396,8 +353,7 @@ def _datos_resguardo(con, incidencia_id):
 
 def _leer_formulario(form):
     """
-    Pasa los datos del formulario (un objeto de Flask) a un diccionario
-    normal, más cómodo de manejar y de enviar a la plantilla.
+    Pasa los datos del formulario a un diccionario normal, más cómodo de manejar.
     De paso limpia los espacios y pone en mayúsculas el DNI y la matrícula.
     """
     return {
@@ -411,12 +367,11 @@ def _leer_formulario(form):
         "cp":             form.get("cp", "").strip(),
         "poblacion":      form.get("poblacion", "").strip(),
         "marca_modelo":   form.get("marca_modelo", "").strip(),
-        # normalizar_matricula deja la matrícula en mayúsculas y sin guiones
-        # ni espacios (la misma función que usan el autorrelleno y el CSV).
+        # normalizar_matricula la deja en mayúsculas y sin guiones ni espacios.
         "matricula":      normalizar_matricula(form.get("matricula", "")),
         "kilometros":     form.get("kilometros", "").strip(),
         "combustible":    form.get("combustible", "1/2"),
         "recoger_piezas": form.get("recoger_piezas", "No"),
-        # getlist recoge TODAS las casillas que se llaman "reparacion".
+        # getlist recoge todas las casillas que se llaman "reparacion".
         "reparaciones":   [r.strip() for r in form.getlist("reparacion")],
     }

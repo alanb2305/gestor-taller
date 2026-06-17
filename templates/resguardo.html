@@ -4,12 +4,8 @@
 
 {% block contenido %}
 
-  {# Estos botones NO salen al imprimir (clase no-imprimir, oculta por CSS).
-     Hay dos formas de llevarse el documento:
-       - "Imprimir": abre el diálogo del navegador (permite imprimir en papel
-         o "guardar como PDF").
-       - "Descargar PDF": baja directamente el archivo .pdf generado en el
-         servidor (ruta incidencias.descargar_pdf). #}
+  {# Estos botones no salen al imprimir (clase no-imprimir). "Imprimir" abre el
+     diálogo del navegador; "Descargar PDF" baja el archivo generado en el servidor. #}
   <div class="no-imprimir mb-3 d-flex gap-2">
     <button type="button" class="btn btn-principal" onclick="window.print()">
       <i class="bi bi-printer"></i> Imprimir
@@ -23,8 +19,8 @@
     </a>
   </div>
 
-  {# La "hoja" es el documento en sí. En pantalla se ve como un folio y al
-     imprimir ocupa un A4 (estilos en estilos.css, sección de impresión). #}
+  {# La "hoja" es el documento: en pantalla se ve como un folio y al imprimir
+     ocupa un A4 (estilos en estilos.css). #}
   <div class="hoja">
 
     {# -------------------- Cabecera del taller -------------------- #}
@@ -40,9 +36,7 @@
     </header>
 
     {# -------------------- Título -------------------- #}
-    {# El número de resguardo es el id de la incidencia en la base de datos,
-       a 5 cifras (p. ej. 00007). Si por lo que sea no hubiera id, dejamos el
-       hueco en blanco para rellenarlo a mano. #}
+    {# El número de resguardo es el id de la incidencia a 5 cifras (p. ej. 00007). #}
     <div class="hoja-titulo">
       <h1>RESGUARDO DE DEPÓSITO
         N.º {% if datos.id %}{{ "%05d"|format(datos.id) }}{% else %}____________{% endif %}</h1>
@@ -117,10 +111,9 @@
     </section>
 
     {# -------------------- Fotos de los daños -------------------- #}
-    {# Se gestionan desde aquí porque la ficha ya existe y tiene id. Las
-       miniaturas forman parte del documento (se imprimen); el formulario de
-       subida y los botones de borrar llevan la clase no-imprimir para que no
-       salgan en el papel. #}
+    {# La ficha ya tiene id, así que aquí se le pueden colgar fotos. Las
+       miniaturas sí se imprimen; el formulario de subir y los botones de borrar
+       llevan la clase no-imprimir para que no salgan en el papel. #}
     <section class="hoja-bloque">
       <h2>Fotos de los daños</h2>
 
@@ -141,22 +134,32 @@
           {% endfor %}
         </div>
       {% else %}
-        <p class="text-muted small no-imprimir mb-2">Todavía no hay fotos.</p>
+        <p class="text-muted small no-imprimir mb-2">Todavía no hay fotos de los daños.</p>
       {% endif %}
 
-      {# Subir fotos: solo en pantalla. La validación de tipo y tamaño está en
-         el servidor (servicios/fotos.py); el accept es solo una ayuda visual. #}
-      <form class="no-imprimir" method="post" enctype="multipart/form-data"
-            action="{{ url_for('incidencias.subir_fotos', incidencia_id=datos.id) }}">
-        <div class="input-group">
-          <input type="file" name="fotos" class="form-control"
-                 accept="image/*" multiple>
-          <button type="submit" class="btn btn-principal">
-            <i class="bi bi-upload"></i> Subir fotos
-          </button>
-        </div>
-        <div class="form-text">Se admiten JPG, PNG o WEBP de hasta 5 MB por foto.</div>
-      </form>
+      {# Caja para subir fotos. Solo se ve en pantalla (no-imprimir); la pinto
+         como un panel aparte para que se note que es una zona donde se actúa y
+         no parte del documento. La validación de tipo y tamaño está en el
+         servidor (servicios/fotos.py); el accept es solo una ayuda. #}
+      <div class="subir-fotos no-imprimir">
+        <label for="fotos" class="form-label fw-semibold mb-2">
+          <i class="bi bi-camera"></i> Añadir fotos de los daños
+        </label>
+        <form method="post" enctype="multipart/form-data"
+              action="{{ url_for('incidencias.subir_fotos', incidencia_id=datos.id) }}">
+          <div class="input-group">
+            <input type="file" name="fotos" id="fotos" class="form-control"
+                   accept="image/*" multiple>
+            <button type="submit" class="btn btn-principal">
+              <i class="bi bi-upload"></i> Subir fotos
+            </button>
+          </div>
+          <div class="form-text">
+            Puedes seleccionar varias a la vez. Se admiten JPG, PNG o WEBP de
+            hasta 5 MB por foto.
+          </div>
+        </form>
+      </div>
     </section>
 
     {# -------------------- Piezas y firmas -------------------- #}
@@ -184,10 +187,8 @@
     </section>
 
     {# -------------------- Pie del documento -------------------- #}
-    {# Nota: los textos legales (autorización sin presupuesto, garantía,
-       protección de datos...) se han retirado en esta versión académica.
-       Cuando la app se use en el taller habrá que añadirlos revisados; con
-       Git se pueden recuperar del historial del proyecto. #}
+    {# Los textos legales (garantía, protección de datos...) se han quitado en
+       esta versión académica; en un taller real habría que añadirlos revisados. #}
     <footer class="hoja-pie small">
       {{ taller.nombre }} — {{ taller.direccion }}<br>
       Tel. {{ taller.telefono }}{% if taller.fax %} · Fax {{ taller.fax }}{% endif %}{% if taller.email %} · {{ taller.email }}{% endif %}

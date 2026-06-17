@@ -1,10 +1,10 @@
 -- ============================================================
 --  Esquema de la base de datos · GestorTaller
---  Cuatro tablas relacionadas:
---    clientes  ->  vehiculos  ->  incidencias  ->  reparaciones
+--  Tablas relacionadas:
+--    clientes -> vehiculos -> incidencias -> reparaciones / fotos
 -- ============================================================
 
-PRAGMA foreign_keys = ON;   -- hace que SQLite respete las claves foráneas
+PRAGMA foreign_keys = ON;   -- para que SQLite respete las claves foráneas
 
 -- Un cliente puede tener varios vehículos.
 CREATE TABLE IF NOT EXISTS clientes (
@@ -51,11 +51,9 @@ CREATE TABLE IF NOT EXISTS reparaciones (
     FOREIGN KEY (incidencia_id) REFERENCES incidencias(id) ON DELETE CASCADE
 );
 
--- Fotos de los daños del vehículo, asociadas a una incidencia.
--- Guardamos solo el nombre del archivo; la imagen en sí vive en datos/fotos
--- (DIR_FOTOS), fuera de la base de datos. ON DELETE CASCADE: si se borra la
--- incidencia se borran también sus filas de fotos (el fichero de cada foto se
--- borra desde el código, en servicios/fotos.py).
+-- Fotos de los daños, asociadas a una incidencia. Guardo solo el nombre del
+-- archivo; la imagen vive en datos/fotos. ON DELETE CASCADE: al borrar la
+-- incidencia se borran sus filas de fotos (el fichero lo borra el código).
 CREATE TABLE IF NOT EXISTS fotos (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,
     incidencia_id  INTEGER NOT NULL,

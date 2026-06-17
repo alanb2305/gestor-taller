@@ -1,11 +1,7 @@
 """
-Agenda de entregas.
-
-Una pantalla sencilla que reúne las fichas que aún no se han entregado y que
-tienen fecha de entrega, repartidas por urgencia (vencidas, hoy y próximas).
-No hace falta ninguna tabla nueva: los datos ya están en las incidencias
-(fecha_entrega y estado); aquí solo los consultamos y los agrupamos. La idea es
-tener a la vista qué coches toca entregar, sin montar un calendario interactivo.
+Agenda de entregas: una pantalla que reúne las fichas sin entregar que tienen
+fecha de entrega y las reparte por urgencia (vencidas, hoy y próximas). No
+necesita ninguna tabla nueva: los datos ya están en las incidencias.
 """
 
 from datetime import date
@@ -30,9 +26,8 @@ def agenda():
     finally:
         con.close()
 
-    # Hoy en ISO (AAAA-MM-DD). Las fechas de la base de datos van en ese mismo
-    # formato, así que las comparamos como texto: en ISO el orden alfabético
-    # coincide con el cronológico (el mismo truco que usa validaciones.js).
+    # Hoy en ISO (AAAA-MM-DD). Las fechas de la BD van en ese formato, así que
+    # las comparo como texto (en ISO el orden alfabético es el cronológico).
     hoy = date.today().isoformat()
 
     vencidas = []

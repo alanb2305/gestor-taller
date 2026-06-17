@@ -1,15 +1,8 @@
 """
-Datos de ejemplo para la demo.
-
-Rellena la base de datos con tres clientes, sus coches y varias incidencias,
-para poder enseñar el autorrelleno, el historial, los estados y los gráficos
-sin tener que teclear todo a mano.
-
-Los datos son INVENTADOS y genéricos (proyecto académico): nombres de ejemplo,
-DNIs de prueba con letra de control válida y poblaciones cualesquiera.
-
-Solo siembra si la base está vacía, así no se duplican los datos al ejecutarlo
-dos veces.
+Datos de ejemplo para la demo. Rellena la base con tres clientes, sus coches y
+varias incidencias, para enseñar el autorrelleno, el historial, los estados y
+las gráficas sin teclear todo a mano. Los datos son inventados (los DNIs llevan
+letra de control válida). Solo siembra si la base está vacía.
 
     python datos_ejemplo.py
 """

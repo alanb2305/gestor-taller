@@ -1,13 +1,10 @@
 /* ===========================================================================
    Trabajos a realizar: añadir y quitar líneas.
 
-   En vez de mostrar un número fijo de líneas, empezamos con una y el usuario
-   añade las que necesite con el botón "+". Cada línea tiene una papelera para
-   quitarla. Todas las cajas se llaman "reparacion": el servidor las recoge
-   juntas con getlist() y descarta las vacías, así que da igual cuántas haya.
-
-   Si no hubiera JavaScript, el formulario sigue funcionando: se ve la línea (o
-   las líneas) que pinta la plantilla y se pueden enviar igual.
+   Empiezo con una línea y el usuario añade las que necesite con el botón "+".
+   Cada una tiene una papelera para quitarla. Todas se llaman "reparacion": el
+   servidor las recoge juntas con getlist() y descarta las vacías. Sin
+   JavaScript el formulario sigue funcionando con la línea que pinta la plantilla.
    =========================================================================== */
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -24,15 +21,15 @@ document.addEventListener("DOMContentLoaded", function () {
     renumerar();
   });
 
-  // Papelera: quita la línea. Usamos delegación (un solo listener en la lista)
-  // para que funcione también con las filas que se añaden después.
+  // Papelera: quita la línea. Uso delegación (un listener en la lista) para que
+  // funcione también con las filas que se añaden después.
   lista.addEventListener("click", function (evento) {
     const botonQuitar = evento.target.closest(".quitar-trabajo");
     if (!botonQuitar) return;
 
     const filas = lista.querySelectorAll(".fila-trabajo");
-    // Dejamos siempre al menos una línea: si es la última, en vez de quitarla
-    // solo la vaciamos, para que el formulario no se quede sin ninguna.
+    // Dejo siempre al menos una línea: si es la última, en vez de quitarla solo
+    // la vacío, para que el formulario no se quede sin ninguna.
     if (filas.length <= 1) {
       lista.querySelector(".fila-trabajo input").value = "";
     } else {
@@ -41,8 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
     renumerar();
   });
 
-  // Crea una fila nueva (caja de texto + papelera) y la devuelve. El HTML es
-  // fijo (no metemos datos escritos por el usuario), así que es seguro.
+  // Crea una fila nueva (caja de texto + papelera) y la devuelve.
   function crearFila() {
     const fila = document.createElement("div");
     fila.className = "input-group mb-2 fila-trabajo";

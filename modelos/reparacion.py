@@ -1,9 +1,8 @@
 """
 Acceso a la tabla 'reparaciones'.
 
-Cada incidencia (orden de trabajo) tiene una o varias líneas de
-reparación. En el programa original eran 5 líneas fijas; aquí guardamos
-las que hagan falta, cada una como una fila independiente.
+Cada incidencia tiene una o varias líneas de reparación, cada una como una
+fila. (En el programa original eran 5 líneas fijas; aquí van las que hagan falta.)
 """
 
 
