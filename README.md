@@ -1,115 +1,73 @@
 # GestorTaller
 
-Aplicación web para la gestión de un taller de automóviles: clientes,
-vehículos, órdenes de trabajo (incidencias) y generación del resguardo de
-depósito en PDF, con un panel de gráficas y exportación/importación en CSV.
+**Aplicación web de uso local para gestionar un taller de automóviles.** Sustituye al
+papel y a las libretas: lleva los clientes, los coches y las entradas al taller, y genera
+el **resguardo de depósito** —el justificante que se entrega al cliente cuando deja el
+coche— listo para imprimir o descargar en PDF.
 
-Proyecto de Trabajo de Fin de Grado (DAM). La aplicación es **genérica**: para
-adaptarla a un taller concreto solo hay que cambiar los datos del fichero
-`config.py` (no hay que tocar nada más).
+Proyecto de Trabajo de Fin de Grado del ciclo de **Desarrollo de Aplicaciones
+Multiplataforma (DAM)**.
+
+## El problema que resuelve
+
+Muchos talleres pequeños se gestionan con papel: las fichas se pierden, hay que reescribir
+los datos del mismo cliente una y otra vez y no hay forma cómoda de saber qué coches están
+pendientes de entregar. GestorTaller ordena justo eso, y guarda un historial consultable de
+todo lo que ha pasado por el taller.
+
+## Qué hace
+
+- Da de alta la **ficha de cada coche** (la orden de trabajo) y genera su **resguardo en PDF**.
+- **Autorrellena** los datos del cliente y del vehículo al escribir una matrícula ya conocida.
+- Guarda el **historial** con buscador y controla el **estado** de cada reparación
+  (recepcionado → en reparación → terminado → entregado).
+- **Agenda** de entregas, agrupadas en vencidas, de hoy y próximas.
+- Panel de inicio con **gráficas** de resumen e **importación/exportación en CSV**.
+- Es **genérica**: para adaptarla a otro taller solo se cambia el fichero `config.py`.
 
 ## Tecnologías
 
-- Python + Flask
-- Base de datos SQLite
-- HTML, CSS y JavaScript con Bootstrap
-- Chart.js para las gráficas
-- ReportLab para el PDF
-- Waitress como servidor en producción
+Python + **Flask** · base de datos **SQLite** · HTML, CSS y JavaScript con **Bootstrap** ·
+**Chart.js** para las gráficas · **ReportLab** para el PDF · **Waitress** como servidor ·
+**PyInstaller** para el ejecutable.
 
-## Requisitos
+## Cómo ejecutarlo
 
-- Python 3.10 o superior.
+Requisito: **Python 3.10 o superior**.
 
-## Instalación
+```
+pip install -r requirements.txt
+python app.py
+```
 
-1. Crear un entorno virtual (recomendado):
+Se abre en `http://127.0.0.1:5000`. La base de datos se crea sola la primera vez.
 
-       python -m venv venv
-       venv\Scripts\activate          # Windows
-       source venv/bin/activate       # Linux / Mac
+Para la demostración conviene sembrar datos de prueba y usar el servidor de producción:
 
-2. Instalar las dependencias:
+```
+python datos_ejemplo.py     # rellena clientes, coches y fichas de ejemplo
+python servidor.py          # http://127.0.0.1:8000
+```
 
-       pip install -r requirements.txt
-
-## Ejecución
-
-**En desarrollo** (con recarga automática y modo depuración):
-
-       python app.py
-
-Abre en el navegador: http://127.0.0.1:5000
-
-**En producción o para la demo** (servidor Waitress, sin modo depuración):
-
-       python servidor.py
-
-Abre en el navegador: http://127.0.0.1:8000
-
-La base de datos (`datos/taller.db`) se crea sola la primera vez.
-
-## Generar un ejecutable (.exe) para el tribunal
-
-Para que el tribunal pueda probar la aplicación sin instalar Python ni
-dependencias, se puede empaquetar todo en un único `.exe` con
-[PyInstaller](https://pyinstaller.org/). Basta con hacer doble clic en el `.exe`:
-arranca el servidor y abre el navegador con la aplicación ya en marcha.
-
-Desde la carpeta del proyecto, en Windows:
-
-       pip install pyinstaller
-       pyinstaller gestor_taller.spec
-
-El ejecutable queda en `dist\GestorTaller.exe`. La base de datos y las fotos se
-crean en una carpeta `datos\` junto al `.exe` la primera vez que se abre, así que
-conviene dejar el `.exe` en su propia carpeta.
-
-> El `.exe` hay que generarlo en Windows (PyInstaller no crea ejecutables de
-> Windows desde Linux o Mac). El archivo `gestor_taller.spec` es la «receta» del
-> empaquetado y `construir_exe.ps1` hace esos dos pasos de una sola vez.
-
-## Datos de ejemplo (opcional)
-
-Para rellenar la base con clientes, coches y fichas de prueba y poder enseñar
-el autorrelleno, el historial, los estados y las gráficas:
-
-       python datos_ejemplo.py
-
-Solo siembra si la base está vacía, así no se duplican los datos.
+Para que el tribunal lo pruebe **sin instalar nada**, el proyecto se empaqueta en un único
+ejecutable con `pyinstaller gestor_taller.spec`: el `.exe` (en `dist\GestorTaller.exe`)
+arranca con doble clic y abre el navegador solo.
 
 ## Estructura del proyecto
 
-    gestor_taller/
-    ├── app.py            punto de entrada (desarrollo)
-    ├── servidor.py       arranque en producción (Waitress)
-    ├── config.py         configuración y datos del taller
-    ├── datos_ejemplo.py  siembra datos de prueba
-    ├── requirements.txt
-    ├── modelos/          acceso a datos (conexion, cliente, vehiculo,
-    │                     incidencia, reparacion, esquema.sql)
-    ├── rutas/            las pantallas (principal, incidencias, clientes,
-    │                     vehiculos, datos)
-    ├── servicios/        validaciones, generación de PDF, import/export CSV
-    ├── templates/        plantillas HTML
-    ├── static/           CSS y JavaScript
-    └── datos/            base de datos SQLite (se crea sola)
+```
+modelos/     acceso a datos: un módulo por tabla + esquema.sql
+rutas/       controladores (Blueprints de Flask)
+servicios/   validaciones, generación de PDF, CSV y fotos
+templates/   vistas (plantillas Jinja2)
+static/      CSS y JavaScript
+config.py    datos del taller (lo único que se cambia para otro taller)
+```
 
-## Despliegue en la nube (opcional)
+La aplicación está organizada **por capas** para que sea fácil de entender y mantener: las
+rutas reciben la petición, los servicios contienen la lógica y los modelos hablan con la
+base de datos.
 
-La aplicación es una app WSGI estándar de Flask (el objeto `app` de `app.py`),
-así que puede subirse a un alojamiento gratuito como **PythonAnywhere** o
-**Render**. A grandes rasgos: subir el código, crear allí un entorno virtual e
-instalar `requirements.txt`, y configurar el servidor de la plataforma para que
-importe `app` desde `app.py` (en PythonAnywhere, en su fichero WSGI; en Render,
-con un comando de arranque tipo `waitress-serve --listen=*:$PORT app:app`).
-Como los detalles de cada plataforma cambian, conviene seguir su guía oficial
-actual. Para la defensa, muchas veces basta con ejecutarlo en local con
-`python servidor.py`.
+---
 
-## Notas de seguridad
-
-La `CLAVE_SECRETA` de `config.py` es de ejemplo. Para un despliegue público de
-verdad conviene poner una clave secreta propia (idealmente desde una variable
-de entorno) y añadir protección CSRF a los formularios. Para uso dentro de la
-red local del taller no es crítico.
+Autor: **Alain Blanquies Marco** · DAM · CESTE Centro Universitario
